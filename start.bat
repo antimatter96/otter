@@ -1,1 +1,1 @@
-now -e PRO=1 -e redispassword=661996
+now -e PRO=1 -e redispassword=*********
