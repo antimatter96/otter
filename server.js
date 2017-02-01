@@ -209,31 +209,6 @@ app.post('/shorten',function(req,res){
 				}
 			});		
 		});
-		/*
-		client.get(shortUrl,function(err,reply){
-			if(err){
-				//console.log(err);
-				res.sendStatus(401);
-			}
-			if(reply){
-				shortUrl+=rndm.base62(3);
-			}
-			client.set(shortUrl,url,function(err,reply){
-				if(err){
-					//console.log(err);
-					res.sendStatus(401);
-				}
-				else{
-					if(reply==="OK"){
-						res.render('created.njk',{shortUrl:req.hostname+"/i/"+shortUrl});
-					}
-					else{
-						res.sendStatus(401);
-					}
-				}
-			});
-		})
-		*/
 	}
 	
 })
