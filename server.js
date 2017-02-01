@@ -4,7 +4,7 @@ var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var validator = require('validator');
 var morgan = require('morgan');
-//var bcrypt = require('bcrypt-nodejs');
+var bcrypt = require('bcrypt-nodejs');
 var session = require('express-session');
 var RedisStore = require('connect-redis')(session);
 //var uuidV4 = require('uuid/v4');
@@ -129,20 +129,37 @@ app.get('/i/:id',function(req,res){
 	var password = req.query.password || null;
 	var shortUrl = req.params.id;
 	if(shortUrl){
-		client.get(shortUrl,function(err,reply){
+		client.hgetall(shortUrl,function(err,obj){
 			if(err){
 				res.sendStatus(404);
 			}
-			if(reply){
-				res.redirect(reply);
+			if(obj){
+				var valid = false;
+				if(obj.pwd==="no"){
+					valid = true;
+				}
+				else{
+					if(password){
+						if(bcrypt.compareSync(password,obj.pwd)){
+							valid = true;
+						}
+					}
+				}
+				if(valid){
+					res.redirect(obj.url);
+				}
+				else{
+					res.sendStatus(403);
+				}
+				
 			}
 			else{
-				res.redirect('/');
+				res.sendStatus(404);
 			}
 		})
 	}
 	else{
-		
+		res.redirect('/');
 	}
 });
 
@@ -157,30 +174,41 @@ app.post('/shorten',function(req,res){
 	else{
 		url = normalizeUrl(url);
 		var shortUrl = rndm.base62(7);
-		client.get(shortUrl,function(err,reply){
-			if(err){
-				//console.log(err);
+		var password = req.body.password || "no";
+		var passwordHash;
+		client.hgetall(shortUrl,function(err,obj){
+			if(err){					
 				res.sendStatus(401);
 			}
-			if(reply){
+			if(obj){
 				shortUrl+=rndm.base62(3);
 			}
-			client.set(shortUrl,url,function(err,reply){
+			if(password!="no"){
+				passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
+			}
+			else{
+				passwordHash = "no";
+			}
+			client.hmset(shortUrl, "url", url , "pwd", passwordHash , function(err,reply){
 				if(err){
 					//console.log(err);
 					res.sendStatus(401);
 				}
 				else{
 					if(reply==="OK"){
-						res.render('created.njk',{shortUrl:req.hostname+"/i/"+shortUrl});
+						if(password!="no"){
+							res.render('created.njk',{shortUrl:req.hostname+"/i/"+shortUrl+"?password=" + password});
+						}
+						else{
+							res.render('created.njk',{shortUrl:req.hostname+"/i/"+shortUrl});
+						}
 					}
 					else{
 						res.sendStatus(401);
 					}
 				}
-			});
-			
-		})
+			});		
+		});
 	}
 	
 })
