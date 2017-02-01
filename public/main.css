@@ -6,10 +6,10 @@ html{
 body{
 	background:#fefefe;
 	box-shadow:2px 2px 5px rgba(0,0,0,0.25);
-	max-width:960px;
+	max-width:720px;
 	margin:auto;
 	margin-top:1rem;
-	padding-top:1rem;
+	padding-top:2.5rem;
 	border-radius:7px;
 }
 
@@ -20,10 +20,11 @@ body{
 
 .pure-form input.pure-input-noborder,.pure-form textarea.pure-input-noborder{
 	border:0;
+	box-shadow:1px 1px 3px #0078e7;
 }
 
 .pure-form input.pure-input-noborder:focus, .pure-form textarea.pure-input-noborder:focus{
-	box-shadow:inset 0 1px 3px #0078e7;
+	box-shadow:1px 1px 3px #0078e7;
 }
 
 .text-align-center{
