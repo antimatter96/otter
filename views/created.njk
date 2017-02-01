@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Done</title>
+		<link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon">
+		<link rel="icon" href="static/favicon.ico" type="image/x-icon">
+		<link rel="stylesheet" type="text/css" href="static/pure.css">
+		<link rel="stylesheet" type="text/css" href="static/main.css">
+		<script src="static/kjua.min.js"></script>
+		<script src="static/clipboard.min.js"></script>
+		
+	</head>
+	<body>
+		<header>
+		</header>
+		<section class="pure-g">
+			<div class="pure-u-1-5"></div>
+			<div class="pure-u-3-5 pure-g">
+				
+				<div class="pure-u-24-24 pure-g text-align-center">
+					
+					<span id="shortUrl" class="pure-u-3-5 finalUrl">{{ shortUrl }}</span>
+					
+				</div>
+				<br>
+				<br>
+				<div class="pure-u-24-24 text-align-center">
+					<button class="pure-button pure-button-primary" data-clipboard-target="#shortUrl" id="clipboardBtn">Add To Clipboard</button>
+				</div>
+			</div>
+			<div class="pure-u-1-5"></div>
+			<hr>
+			<div class="pure-u-5-5 pure-g text-align-center" style="background:#0078e7;border-radius:0px 0px 7px 7px">
+				<br>
+				<span style="color:white;">Save QR Code</span>
+				<br>
+				<br>
+				<div id="qrCode" text-align-center">
+				</div>
+			</div>
+		</section>
+		<img id="img-buffer" src="static/otter.jpg" style="display:none;">
+		<script>
+			var el = kjua({text: '{{shortUrl}}',render:'image',crisp:true,minVersion:10,ecLevel:'H',size:250,fill:"#000",mode:'image',quiet:0,image:document.getElementById('img-buffer')});
+			document.getElementById("qrCode").appendChild(el);
+			new Clipboard("#clipboardBtn");
+		</script>
+	</body>
+</html>
