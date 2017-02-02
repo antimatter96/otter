@@ -27,7 +27,7 @@ Will be hosted on zeit now
 
 - Password support was added
 - Minimum length of passwords is 4
-- ~~`bcrypt`~~ `bcryptjs` is used to generate the password's hash (salt is added using `bcrypt`)
+- ~~`bcrypt`~~ `bcryptjs` is used to generate the password's hash (salt is also added using ~~`bcrypt`~~ `bcryptjs`)
 - The url is stored in plaintext while the password's hash is stored
 - Data was stored using redis hashes (string field to string value mapping) : 
 ``HMSET shortUrl url longUrl pwd passwordHash``
