@@ -4,7 +4,7 @@ var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var validator = require('validator');
 var morgan = require('morgan');
-var bcrypt = require('bcrypt-nodejs');
+var bcrypt = require('bcryptjs');
 var session = require('express-session');
 var RedisStore = require('connect-redis')(session);
 //var uuidV4 = require('uuid/v4');
@@ -136,22 +136,27 @@ app.get('/i/:id',function(req,res){
 			if(obj){
 				var valid = false;
 				if(obj.pwd==="no"){
-					valid = true;
+					res.sendStatus(403);
+					//valid = true;
 				}
 				else{
 					if(password){
-						if(bcrypt.compareSync(password,obj.pwd)){
-							valid = true;
-						}
+						bcrypt.compare(password, obj.pwd, function(err, res) {
+							if(err){
+								res.sendStatus(403);
+							}
+							if(res){
+								res.redirect(obj.url);
+							}
+							else{
+								res.sendStatus(403);
+							}
+						});
+					}
+					else{
+						res.sendStatus(403);
 					}
 				}
-				if(valid){
-					res.redirect(obj.url);
-				}
-				else{
-					res.sendStatus(403);
-				}
-				
 			}
 			else{
 				res.sendStatus(404);
@@ -184,30 +189,41 @@ app.post('/shorten',function(req,res){
 				shortUrl+=rndm.base62(3);
 			}
 			if(password!="no"){
-				passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
+				bcrypt.genSalt(10, function(err, salt) {
+					bcrypt.hash(password, salt, function(err, hash) {
+						client.hmset(shortUrl, "url", url , "pwd", hash , function(err,reply){
+							if(err){
+								//console.log(err);
+								res.sendStatus(401);
+							}
+							else{
+								if(reply==="OK"){
+									res.render('created.njk',{shortUrl:req.hostname+"/i/"+shortUrl+"?password=" + password});
+								}
+								else{
+									res.sendStatus(401);
+								}
+							}
+						});
+					});
+				});
 			}
 			else{
-				passwordHash = "no";
-			}
-			client.hmset(shortUrl, "url", url , "pwd", passwordHash , function(err,reply){
-				if(err){
-					//console.log(err);
-					res.sendStatus(401);
-				}
-				else{
-					if(reply==="OK"){
-						if(password!="no"){
-							res.render('created.njk',{shortUrl:req.hostname+"/i/"+shortUrl+"?password=" + password});
-						}
-						else{
-							res.render('created.njk',{shortUrl:req.hostname+"/i/"+shortUrl});
-						}
-					}
-					else{
+				client.hmset(shortUrl, "url", url , "pwd", "no" , function(err,reply){
+					if(err){
+						//console.log(err);
 						res.sendStatus(401);
 					}
-				}
-			});		
+					else{
+						if(reply==="OK"){
+							res.render('created.njk',{shortUrl:req.hostname+"/i/"+shortUrl});
+						}
+						else{
+							res.sendStatus(401);
+						}
+					}
+				});
+			}		
 		});
 	}
 	
