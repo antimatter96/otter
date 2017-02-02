@@ -1,6 +1,7 @@
 # otter
-Otter URL shortner
-Ability to shorten with passwords and also get the QR code for the link
+### Otter URL shortner
+#### Ability to shorten with passwords and also get the QR code for the link
+
 ---
 
 ## Stack
