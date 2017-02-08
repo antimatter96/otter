@@ -141,11 +141,11 @@ app.get('/i/:id',function(req,res){
 				}
 				else{
 					if(password){
-						bcrypt.compare(password, obj.pwd, function(err, res) {
+						bcrypt.compare(password, obj.pwd, function(err, result) {
 							if(err){
 								res.sendStatus(403);
 							}
-							if(res){
+							if(result){
 								res.redirect(obj.url);
 							}
 							else{
@@ -231,6 +231,11 @@ app.post('/shorten',function(req,res){
 
 app.get('/shorten',function(req,res){
 	res.redirect('/');
+});
+
+app.use(function(req, res, next) {
+    res.status(404);
+    res.render('404.njk');
 });
 
 app.listen(app.get('port'), function() {
