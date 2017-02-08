@@ -141,11 +141,11 @@ app.get('/i/:id',function(req,res){
 				}
 				else{
 					if(password){
-						bcrypt.compare(password, obj.pwd, function(err, res) {
+						bcrypt.compare(password, obj.pwd, function(err, result) {
 							if(err){
 								res.sendStatus(403);
 							}
-							if(res){
+							if(result){
 								res.redirect(obj.url);
 							}
 							else{
