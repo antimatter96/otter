@@ -233,6 +233,11 @@ app.get('/shorten',function(req,res){
 	res.redirect('/');
 });
 
+app.use(function(req, res, next) {
+    res.status(404);
+    res.render('404.njk');
+});
+
 app.listen(app.get('port'), function() {
 	console.log("Running on port " + app.get('port'));
 });
