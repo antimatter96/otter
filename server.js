@@ -131,13 +131,11 @@ app.get('/i/:id',function(req,res){
 	if(shortUrl){
 		client.hgetall(shortUrl,function(err,obj){
 			if(err){
-				res.sendStatus(404);
+				res.sendStatus(500);
 			}
-			if(obj){
-				var valid = false;
+			else if(obj){
 				if(obj.pwd==="no"){
 					res.sendStatus(403);
-					//valid = true;
 				}
 				else{
 					if(password){
@@ -183,50 +181,51 @@ app.post('/shorten',function(req,res){
 		var passwordHash;
 		client.hgetall(shortUrl,function(err,obj){
 			if(err){					
-				res.sendStatus(401);
-			}
-			if(obj){
-				shortUrl+=rndm.base62(3);
-			}
-			if(password!="no"){
-				bcrypt.genSalt(10, function(err, salt) {
-					bcrypt.hash(password, salt, function(err, hash) {
-						client.hmset(shortUrl, "url", url , "pwd", hash , function(err,reply){
-							if(err){
-								//console.log(err);
-								res.sendStatus(401);
-							}
-							else{
-								if(reply==="OK"){
-									res.render('created.njk',{shortUrl:req.hostname+"/i/"+shortUrl+"?password=" + password});
-								}
-								else{
-									res.sendStatus(401);
-								}
-							}
-						});
-					});
-				});
+				res.sendStatus(500);
 			}
 			else{
-				client.hmset(shortUrl, "url", url , "pwd", "no" , function(err,reply){
-					if(err){
-						//console.log(err);
-						res.sendStatus(401);
-					}
-					else{
-						if(reply==="OK"){
-							res.render('created.njk',{shortUrl:req.hostname+"/i/"+shortUrl});
+				if(obj){
+					shortUrl+=rndm.base62(3);
+				}
+				if(password!="no"){
+					bcrypt.genSalt(10, function(err, salt) {
+						bcrypt.hash(password, salt, function(err, hash) {
+							client.hmset(shortUrl, "url", url , "pwd", hash , function(err,reply){
+								if(err){
+									//console.log(err);
+									res.sendStatus(401);
+								}
+								else{
+									if(reply==="OK"){
+										res.render('created.njk',{shortUrl:req.hostname+"/i/"+shortUrl+"?password=" + password});
+									}
+									else{
+										res.sendStatus(401);
+									}
+								}
+							});
+						});
+					});
+				}
+				else{
+					client.hmset(shortUrl, "url", url , "pwd", "no" , function(err,reply){
+						if(err){
+							//console.log(err);
+							res.sendStatus(500);
 						}
 						else{
-							res.sendStatus(401);
+							if(reply==="OK"){
+								res.render('created.njk',{shortUrl:req.hostname+"/i/"+shortUrl});
+							}
+							else{
+								res.sendStatus(500);
+							}
 						}
-					}
-				});
-			}		
+					});
+				}
+			}
 		});
 	}
-	
 })
 
 app.get('/shorten',function(req,res){
