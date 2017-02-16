@@ -2,7 +2,7 @@
 
 [![Known Vulnerabilities](https://snyk.io/test/github/antimatter96/otter/badge.svg)](https://snyk.io/test/github/antimatter96/otter)
 
-Current version : https://otr-pmxlfwpbxb.now.sh/
+Current version : https://otr-wyjbvjdkhn.now.sh/
 
 ### Otter URL shortner
 #### Ability to shorten with passwords and also get the QR code for the link
