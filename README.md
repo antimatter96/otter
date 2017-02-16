@@ -48,8 +48,7 @@ Will be hosted on zeit now
 
 ## Upcoming
 
-#### Passing password in URL will br removed
-#### Password would have to be entered in seperate page
+#### Passing password in URL will be removed, Password would have to be entered in seperate page
 
 Other features to be added :
 - Protection : Based on OWASP guidelines
