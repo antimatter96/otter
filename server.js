@@ -147,13 +147,12 @@ app.get('/new',csrfProtection,function(req,res){
 })
 
 app.get('/i/:id',csrfProtection,function(req,res){
-	console.log(req.session.attempts);
 	var password = req.query.password || null;
 	var shortUrl = req.params.id;
 	if(shortUrl){
 		client.hgetall(shortUrl,function(err,obj){
 			if(err){
-				res.sendStatus(401);
+				res.sendStatus(500);
 			}
 			else if(obj){
 				if(obj.pwd==="no"){
@@ -163,7 +162,7 @@ app.get('/i/:id',csrfProtection,function(req,res){
 					if(password){
 						bcrypt.compare(password, obj.pwd, function(err, result) {
 							if(err){
-								res.sendStatus(401);
+								res.sendStatus(500);
 							}
 							else if(result){
 								var decipher = crypto.createDecipher('AES-192-CTR', password);
@@ -216,7 +215,7 @@ app.post('/i/:id',csrfProtection,function(req,res){
 
 app.post('/shorten',csrfProtection,function(req,res){
 	if(req.xhr){
-		res.sendStatus(401);
+		res.sendStatus(403);
 	}
 	var url = req.body.url;
 	if(!validator.isURL(url)){
@@ -224,12 +223,12 @@ app.post('/shorten',csrfProtection,function(req,res){
 	}
 	else{
 		url = normalizeUrl(url);
-		var shortUrl = rndm.base62(7);
+		var shortUrl = rndm.base62(6);
 		var password = req.body.password || "no";
 		var passwordHash;
 		client.hgetall(shortUrl,function(err,obj){
 			if(err){					
-				res.sendStatus(401);
+				res.sendStatus(500);
 			}
 			else{
 				if(obj){
@@ -244,14 +243,14 @@ app.post('/shorten',csrfProtection,function(req,res){
 							client.hmset(shortUrl, "url", urlHash , "pwd", hash , function(err,reply){
 								if(err){
 									//console.log(err);
-									res.sendStatus(401);
+									res.sendStatus(500);
 								}
 								else{
 									if(reply==="OK"){
 										res.render('created.njk',{shortUrl:req.hostname+"/i/"+shortUrl,password:password});
 									}
 									else{
-										res.sendStatus(401);
+										res.sendStatus(500);
 									}
 								}
 							});
@@ -262,14 +261,14 @@ app.post('/shorten',csrfProtection,function(req,res){
 					client.hmset(shortUrl, "url", url , "pwd", "no" , function(err,reply){
 						if(err){
 							//console.log(err);
-							res.sendStatus(401);
+							res.sendStatus(500);
 						}
 						else{
 							if(reply==="OK"){
 								res.render('created.njk',{shortUrl:req.hostname+"/i/"+shortUrl,password:"no"});
 							}
 							else{
-								res.sendStatus(401);
+								res.sendStatus(500);
 							}
 						}
 					});
