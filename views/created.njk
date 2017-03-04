@@ -2,48 +2,38 @@
 <html>
 	<head>
 		<title>Done</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 		<link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon">
 		<link rel="icon" href="static/favicon.ico" type="image/x-icon">
-		<link rel="stylesheet" type="text/css" href="static/pure.css">
-		<link rel="stylesheet" type="text/css" href="static/main.css">
-		<link rel="stylesheet" type="text/css" href="static/grids-responsive-min.css">
+		<link rel="stylesheet" type="text/css" href="static/spectre.css">
 		<script src="static/kjua.min.js"></script>
 		<script src="static/clipboard.min.js"></script>
-		
 	</head>
 	<body>
 		<header>
-		</header>
-		<section class="pure-g">
-			<div class="pure-u-1-5"></div>
-			<div class="pure-u-3-5 pure-g">
-				
-				<div class="pure-u-24-24 pure-g text-align-center">
-					
-					<span id="shortUrl" class="pure-u-4-5 finalUrl">{{ shortUrl }}</span>
-					<br class="small">
-					<button class="pure-button pure-button-primary" data-clipboard-target="#shortUrl" id="clipboardBtn">Add To Clipboard</button>
-					
-				</div>
-				<br class="small">
-				{% if password.length > 2 %}
-				<div class="pure-u-24-24  pure-g text-align-center">
-					
-					<span id="shortUrl2" class="pure-u-4-5 finalUrl">{{ shortUrl }}?password={{password}}</span>
-					<br class="small">
-					<button class="pure-button pure-button-primary" data-clipboard-target="#shortUrl2" id="clipboardBtn2">Add To Clipboard With Password</button>
-					
-				</div>
-				{% endif %}
+			<div class="centered text-center">
+				<h1>Otter</h1>
 			</div>
-			<div class="pure-u-1-5"></div>
-			<hr>
-			<div class="pure-u-5-5 pure-g text-align-center" style="background:#0078e7;border-radius:0px 0px 7px 7px;padding-bottom:3rem">
-				<br>
-				<span style="color:white;">Save QR Code</span>
-				<br>
-				<br>
-				<div id="qrCode" text-align-center">
+			<div class="divider"></div>
+		</header>
+		<section class="container">
+			<div class="columns">
+				<div class="column col-gapless col-3 col-xs-11 col-sm-9 text-center centered">
+					<span id="shortUrl">{{ shortUrl }}</span>
+					<br>
+					<button data-clipboard-target="#shortUrl" id="clipboardBtn" class="btn" >Add To Clipboard</button>
+				</div>
+			</div>
+			<div class="divider"></div>
+			<br>
+			<div class="columns">
+				<div class="column col-gapless col-3 col-xs-11 col-sm-9 centered text-center" style="background:#0078e7;padding-bottom:3rem">
+					<br>
+					<span style="color:white;">Save QR Code</span>
+					<br>
+					<br>
+					<div id="qrCode">
+					</div>
 				</div>
 			</div>
 		</section>
@@ -52,22 +42,6 @@
 			var el = kjua({text: '{{shortUrl}}',render:'image',crisp:true,minVersion:10,ecLevel:'H',size:250,fill:"#000",mode:'image',quiet:0,image:document.getElementById('img-buffer')});
 			document.getElementById("qrCode").appendChild(el);
 			new Clipboard("#clipboardBtn");
-			
-			{% if password.length > 2 %}
-				var qa = document.createElement('span');
-				qa.innerText = "Without password";
-				document.getElementById("qrCode").appendChild(qa);
-			{% endif %}
-			
-			{% if password.length > 2 %}
-				var el2 = kjua({text: '{{shortUrl}}?password={{password}}',render:'image',crisp:true,minVersion:10,ecLevel:'H',size:250,fill:"#000",mode:'image',quiet:0,image:document.getElementById('img-buffer')});
-				document.getElementById("qrCode").appendChild(el2);
-				var qa2 = document.createElement('span');
-				qa2.innerText = "With password";
-				document.getElementById("qrCode").appendChild(qa2);
-				
-				new Clipboard("#clipboardBtn2");
-			{% endif %}
 		</script>
 	</body>
 </html>
