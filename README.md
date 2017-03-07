@@ -2,7 +2,7 @@
 
 [![Known Vulnerabilities](https://snyk.io/test/github/antimatter96/otter/badge.svg)](https://snyk.io/test/github/antimatter96/otter)
 
-Current version : https://otr-gmkwuomhde.now.sh/ OR 
+Current version : https://otr-gvtqbuafvr.now.sh/ OR 
 https://awter.herokuapp.com
 
 ### Otter URL shortner
@@ -46,7 +46,7 @@ Will be hosted on zeit now and heroku
 - Basic limiting on number of password attempts is introduced
 - Improved error handling and error codes
 
- **Need to Add nonce to AES**
+ ** Need to Add nonce to AES **
 
 ## Upcoming
 
