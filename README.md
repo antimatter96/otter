@@ -2,8 +2,8 @@
 
 [![Known Vulnerabilities](https://snyk.io/test/github/antimatter96/otter/badge.svg)](https://snyk.io/test/github/antimatter96/otter)
 
-Current version : https://otr-gvtqbuafvr.now.sh/ OR 
-https://awter.herokuapp.com
+Current version : https://otr-gmkwuomhde.now.sh/ OR 
+https://awter.herokuapp.com (both are on branch ahead on visual changes)
 
 ### Otter URL shortner
 #### Ability to shorten with passwords and also get the QR code for the link
@@ -29,6 +29,7 @@ Will be hosted on zeit now and heroku
 - The first version lacked support for passwords
 - Data was stored as key-value  :   ` SET shortURl longUrl `
 
+
 ## V2
 
 - Password support was added
@@ -46,12 +47,11 @@ Will be hosted on zeit now and heroku
 - Basic limiting on number of password attempts is introduced
 - Improved error handling and error codes
 
- ** Need to Add nonce to AES **
+** Need to Add nonce to AES **
 
 ## Upcoming
 
-~~Passing password in URL will be removed, Password would have to be entered in seperate page~~
-Done
+### Passing password in URL will be removed, Password would have to be entered in seperate page
 
 Other features to be added :
 - Protection : Based on OWASP guidelines
