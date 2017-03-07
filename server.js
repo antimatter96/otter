@@ -22,7 +22,7 @@ var crypto = require('crypto');
 
 var app = express();
 
-app.use(favicon( __dirname + '/public/favicon.ico'));
+app.use(favicon(__dirname + '/public/favicon.ico'));
 app.set('views', __dirname + '/views');
 app.use('/static', express.static('public'));
 
@@ -147,6 +147,7 @@ app.get('/new',csrfProtection,function(req,res){
 })
 
 app.get('/i/:id',csrfProtection,function(req,res){
+	var password = req.query.password || null;
 	var shortUrl = req.params.id;
 	if(shortUrl){
 		client.hgetall(shortUrl,function(err,obj){
@@ -158,11 +159,36 @@ app.get('/i/:id',csrfProtection,function(req,res){
 					res.redirect(obj.url);
 				}
 				else{
-					if(!req.session.attempts){
-						req.session.attempts = 0;
+					if(password){
+						bcrypt.compare(password, obj.pwd, function(err, result) {
+							if(err){
+								res.sendStatus(500);
+							}
+							else if(result){
+								var decipher = crypto.createDecipher('AES-192-CTR', password);
+								var decrypted = decipher.update(obj.url, 'hex', 'utf8');
+								decrypted += decipher.final('utf8');
+								delete req.session.attempts;
+								res.redirect(decrypted);
+							}
+							else{
+								if(!req.session.attempts){
+									req.session.attempts = 1;
+								}
+								req.session.attempts++;	
+								res.render('passwordNeeded.njk',{shortUrl:shortUrl,message:"Wrong Password",csrfToken:req.csrfToken()});
+								//res.sendStatus(403);
+							}
+						});
 					}
-					req.session.attempts++;
-					res.render('passwordNeeded.njk',{shortUrl:shortUrl,message:"Password Required",csrfToken:req.csrfToken()});
+					else{
+						if(!req.session.attempts){
+							req.session.attempts = 1;
+						}
+						req.session.attempts++;
+						res.render('passwordNeeded.njk',{shortUrl:shortUrl,message:"Password Required",csrfToken:req.csrfToken()});
+						//res.sendStatus(403);
+					}
 				}
 			}
 			else{
@@ -177,58 +203,13 @@ app.get('/i/:id',csrfProtection,function(req,res){
 
 
 app.post('/i/:id',csrfProtection,function(req,res){
-	if(!req.session.attempts){
-		req.session.attempts = 0;
-	}
-	req.session.attempts++;	
 	if(req.session.attempts>5){
 		res.sendStatus(429);
 	}
 	else{
-		var shortUrl = req.params.id;
-		if(shortUrl){
-			client.hgetall(shortUrl,function(err,obj){
-				if(err){
-					res.sendStatus(500);
-				}
-				else if(obj){
-					if(obj.pwd==="no"){
-						res.redirect(obj.url);
-					}
-					else{
-						var password = req.body.password || null;
-						if(password){
-							password = decodeURI(password);
-							bcrypt.compare(password, obj.pwd, function(err, result) {
-								if(err){
-									res.sendStatus(500);
-								}
-								else if(result){
-									var decipher = crypto.createDecipher('AES-192-CTR', password);
-									var decrypted = decipher.update(obj.url, 'hex', 'utf8');
-									decrypted += decipher.final('utf8');
-									delete req.session.attempts;
-									res.redirect(decrypted);
-								}
-								else{
-									res.render('passwordNeeded.njk',{shortUrl:shortUrl,message:"Wrong Password",csrfToken:req.csrfToken()});
-								}
-							});
-						}
-						else{
-							res.render('passwordNeeded.njk',{shortUrl:shortUrl,message:"Password Required",csrfToken:req.csrfToken()});
-						}
-					}
-				}
-				else{
-					res.sendStatus(404);
-				}
-			})
-		}
-		else{
-			res.redirect('/');
-		}
+		res.redirect('/i/' + req.params.id + "?password=" + req.body.password);
 	}
+	
 });
 
 
@@ -242,7 +223,7 @@ app.post('/shorten',csrfProtection,function(req,res){
 	}
 	else{
 		url = normalizeUrl(url);
-		var shortUrl = rndm.base62(7);
+		var shortUrl = rndm.base62(6);
 		var password = req.body.password || "no";
 		var passwordHash;
 		client.hgetall(shortUrl,function(err,obj){
@@ -261,6 +242,7 @@ app.post('/shorten',csrfProtection,function(req,res){
 						bcrypt.hash(password, salt, function(err, hash) {
 							client.hmset(shortUrl, "url", urlHash , "pwd", hash , function(err,reply){
 								if(err){
+									//console.log(err);
 									res.sendStatus(500);
 								}
 								else{
@@ -278,6 +260,7 @@ app.post('/shorten',csrfProtection,function(req,res){
 				else{
 					client.hmset(shortUrl, "url", url , "pwd", "no" , function(err,reply){
 						if(err){
+							//console.log(err);
 							res.sendStatus(500);
 						}
 						else{
