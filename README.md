@@ -1,4 +1,10 @@
 # otter
+
+[![Known Vulnerabilities](https://snyk.io/test/github/antimatter96/otter/badge.svg)](https://snyk.io/test/github/antimatter96/otter)
+
+Current version : https://otr-gvtqbuafvr.now.sh/ OR 
+https://awter.herokuapp.com
+
 ### Otter URL shortner
 #### Ability to shorten with passwords and also get the QR code for the link
 
@@ -9,7 +15,7 @@
 - Express.js
 - Redis
 
-Will be hosted on zeit now
+Will be hosted on zeit now and heroku
 
 ## Basic Functioning
 - User enters URL to shorten
@@ -23,7 +29,6 @@ Will be hosted on zeit now
 - The first version lacked support for passwords
 - Data was stored as key-value  :   ` SET shortURl longUrl `
 
-
 ## V2
 
 - Password support was added
@@ -34,9 +39,19 @@ Will be hosted on zeit now
 ``HMSET shortUrl url longUrl pwd passwordHash``
 - If password is not opted for then a `"no"` is saved instead of `"passwordHash"`
 
-## V3 ( upcoming )
+## V3
 
-The longUrl will encrypted using symetric-key methods with the password as the key . If the password matches the one in redis then the longUrl will be decrypted using it .This ensures that longUrl are not visible even to db admins.
+- The longUrl is encrypted using symetric-key ("AES-192-CTR") with the password as the key . If the password matches the one in redis then the longUrl will be decrypted using it .This ensures that longUrl are not visible even to db admins.
+- CSRF is implemented
+- Basic limiting on number of password attempts is introduced
+- Improved error handling and error codes
+
+ ** Need to Add nonce to AES **
+
+## Upcoming
+
+~~Passing password in URL will be removed, Password would have to be entered in seperate page~~
+Done
 
 Other features to be added :
 - Protection : Based on OWASP guidelines
