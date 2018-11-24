@@ -3,18 +3,22 @@ var nunjucks = require("nunjucks");
 var bodyParser = require("body-parser");
 var cookieParser = require("cookie-parser");
 var validator = require("validator");
-var morgan = require("morgan");
 var bcrypt = require("bcryptjs");
 var session = require("express-session");
 var RedisStore = require("connect-redis")(session);
-//var uuidV4 = require('uuid/v4');
-//var helmet = require('helmet');
 var redis = require("redis");
 var favicon = require("serve-favicon");
 var rndm = require("rndm");
 var normalizeUrl = require("normalize-url");
 var csrf = require("csurf");
 var crypto = require("crypto");
+
+var CONFIG = require("./config");
+
+// Logging
+var fs = require('fs');
+var morgan = require('morgan');
+var path = require('path');
 
 //==============================
 // APP SETUP
@@ -30,26 +34,20 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-app.set("port", process.env.PORT || 8000);
+app.set("port", CONFIG.port);
 
-if(process.env.PRO!=1) {
-	app.use(morgan("dev"));
-}
+// LOGGING
+//=================================================
+
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' });
+app.use(morgan("common", { stream: accessLogStream }));
 
 //===============================
 //TEMPLATE
 //===============================
 
-var nunjucksConfig = {
-	autoescape: true,
-	noCache: true,
-	watch: true,
-	express: app
-};
-
-if(process.env.PRO==1) {
-	nunjucksConfig.noCache = false;
-}
+var nunjucksConfig = Object.assign({}, CONFIG.nunjucks);
+nunjucksConfig.express = app;
 
 nunjucks.configure(app.get("views"), nunjucksConfig);
 
@@ -57,36 +55,12 @@ nunjucks.configure(app.get("views"), nunjucksConfig);
 //DATABASE
 //===============================
 
-var redisConfig;
-if(process.env.PRO==1) {
-	redisConfig = {
-		host:"pub-redis-12002.ap-southeast-1-1.1.ec2.garantiadata.com",
-		port:"12002",
-		password:process.env.redispassword
-	};
-}
-else {
-	redisConfig = {
-		host:"localhost",
-		port:"6379"
-	};
-}
+var sessionConfig = Object.assign({}, CONFIG.sessionConfig);
+sessionConfig.store = new RedisStore(CONFIG.redisConfig);
 
-var client = redis.createClient(redisConfig);
+app.use(session(sessionConfig));
 
-//===============================
-//SESSEION
-//===============================
-
-
-app.use(session({
-	secret: "secretkeyoflength256bits",
-	resave: false,
-	saveUninitialized: false,
-	name:"appSessionId",
-	cookie: { maxAge: 600000 },
-	store: new RedisStore(redisConfig),
-}));
+var client = redis.createClient(CONFIG.redisConfig);
 
 //==================================
 // CUSTOM MIDDLEWARE
@@ -99,11 +73,7 @@ app.use(function(req, res, next) {
 	next();
 });
 
-//================================
-// 
-//================================
-
-var csrfProtection = csrf({cookie:false});
+var csrfProtection = csrf({cookie: false});
 
 //=====================================================
 // ROUTES
