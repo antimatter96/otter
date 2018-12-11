@@ -13,7 +13,7 @@
 				"morgan": "*",
 				"normalize-url": "*",
 				"nunjucks": "*",
-				"redis": "*",
+				"ioredis": "*",
 				"rndm": "*",
 				"serve-favicon": "*",
 				"validator": "*",
