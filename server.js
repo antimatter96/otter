@@ -11,9 +11,9 @@ var csrf = require("csurf");
 var CONFIG = require("./config");
 
 // Logging
-var fs = require('fs');
-var morgan = require('morgan');
-var path = require('path');
+var fs = require("fs");
+var morgan = require("morgan");
+var path = require("path");
 
 //==============================
 // APP SETUP
@@ -34,7 +34,7 @@ app.set("port", CONFIG.port);
 // LOGGING
 //=================================================
 
-const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' });
+const accessLogStream = fs.createWriteStream(path.join(__dirname, "access.log"), { flags: "a" });
 app.use(morgan("common", { stream: accessLogStream }));
 
 //===============================
@@ -89,10 +89,10 @@ app.use(function(req, res, _next) {
 			res.sendFile(path.resolve(__dirname, "./views/404.njk"));
 		},
 		json: function() {
-			res.json({ error: 'Not found' });
+			res.json({ error: "Not found" });
 		},
 		default: function() {
-			res.type('txt').send('Not found');
+			res.type("txt").send("Not found");
 		}
 	});
 });
@@ -100,7 +100,7 @@ app.use(function(req, res, _next) {
 app.use(function(err, req, res, next) {
 	if (!err) {
 		next();
-	} else if (err.code === 'EBADCSRFTOKEN') {
+	} else if (err.code === "EBADCSRFTOKEN") {
 		res.status(403);
 		res.send("CSRF Token Expired OR FORM TAMPERED WITH");
 		res.end();
@@ -112,12 +112,12 @@ app.use(function(err, req, res, next) {
 app.use(function(err, req, res) {
 	console.log("ERROR =>> ", err);
 	res.status(err.status || 500);
-	res.render('error', {
+	res.render("error", {
 		message: err.message,
 		error: {}
 	});
 });
 
-app.listen(app.get('port'), function() {
-	console.log("Running on port " + app.get('port'));
+app.listen(app.get("port"), function() {
+	console.log("Running on port " + app.get("port"));
 });
