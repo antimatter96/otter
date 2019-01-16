@@ -1,31 +1,31 @@
 {
-		"name": "otr",
-		"version": "1.0.0",
-		"description": "URL Shortner",
-		"main": "server.js",
-		"dependencies": {
-				"bcryptjs": "*",
-				"body-parser": "*",
-				"connect-redis": "*",
-				"cookie-parser": "*",
-				"express": "*",
-				"express-session": "*",
-				"morgan": "*",
-				"normalize-url": "*",
-				"nunjucks": "*",
-				"ioredis": "*",
-				"rndm": "*",
-				"serve-favicon": "*",
-				"validator": "*",
-				"csurf": "*"
-		},
-		"scripts": {
-				"test": "echo \"Error: no test specified\" && exit 1",
-				"start": "node server.js"
-		},
-		"author": "Arpit Jain",
-		"license": "ISC",
-		"devDependencies": {
-				"jest": "^23.6.0"
-		}
+	"name": "otr",
+	"version": "1.0.0",
+	"description": "URL Shortner",
+	"main": "server.js",
+	"dependencies": {
+		"bcryptjs": "*",
+		"body-parser": "*",
+		"connect-redis": "*",
+		"cookie-parser": "*",
+		"express": "*",
+		"express-session": "*",
+		"morgan": "*",
+		"normalize-url": "*",
+		"nunjucks": "*",
+		"ioredis": "*",
+		"rndm": "*",
+		"serve-favicon": "*",
+		"validator": "*",
+		"csurf": "*"
+	},
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"start": "node server.js"
+	},
+	"author": "Arpit Jain",
+	"license": "ISC",
+	"devDependencies": {
+		"jest": "^23.6.0"
+	}
 }
