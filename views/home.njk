@@ -36,7 +36,6 @@
 						<div class="form‐group text-center">
 							<button id="submitBtn" type="submit" class="btn btn-primary btn-block">Shorten</button>
 						</div>
-						
 					</form>
 				</div>
 			</div>
@@ -64,10 +63,11 @@
 					else{
 						passwordInput.style.display = "none";
 						passwordInput.required = false;
-					}		
+					}
 				});
 			}
 			window.addEventListener('load',init);	
 		</script>
+			{% include "_footer.njk" %}
 	</body>
 </html>

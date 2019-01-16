@@ -86,7 +86,7 @@ app.use(function(req, res, _next) {
 	res.status(404);
 	res.format({
 		html: function() {
-			res.sendFile(path.resolve(__dirname, "./views/404.njk"));
+			res.render("404.njk")
 		},
 		json: function() {
 			res.json({ error: "Not found" });
