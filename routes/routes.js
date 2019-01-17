@@ -17,11 +17,7 @@ var csrfProtection = csrf({
 	cookie: false
 });
 
-
 var promisfyCryptoScrypt = util.promisify(crypto.scrypt);
-
-
-var formTamperedWithError = "Form Tampered With (- _ -)";
 
 //=====================================================
 // ROUTES
@@ -37,14 +33,42 @@ function rateLimmiter(req, res, next) {
 	}
 }
 
+function checkShortUrlPresence(req, res, next) {
+	if(!req.params.id) {
+		res.redirect("/");
+		return;
+	} else {
+		next();
+	}
+}
+
+async function loadShortUrlData(req, res, next) {
+
+	try {
+		let urlData = await dbQueries.getURL(req.params.id);
+		if (Object.keys(urlData).length === 0 && urlData.constructor === Object) {
+			res.sendStatus(404);
+			return;
+		} else {
+			res.locals.urlData = urlData;
+			next();
+		}
+	} catch(error) {
+		console.error(error);
+		res.sendStatus(500);
+		return;
+	}
+
+}
+
 router.use(rateLimmiter);
 router.use(csrfProtection);
 
 router.get("/", mainGet);
 
 router.get("/new", mainGet);
-router.get("/i/:id", linkGet);
-router.post("/i/:id", linkPost);
+router.get("/i/:id", checkShortUrlPresence, loadShortUrlData, linkGet);
+router.post("/i/:id", checkShortUrlPresence, loadShortUrlData, linkPost);
 
 router.post("/shorten", shorternPost);
 router.get("/shorten", mainGet);
@@ -65,32 +89,18 @@ function mainGet(req, res) {
 
 async function linkGet(req, res) {
 	var shortUrl = req.params.id;
-	if(!shortUrl) {
-		res.redirect("/");
-		return;
-	}
 
 	try {
-		let urlData = await dbQueries.getURL(shortUrl);
-		if(Object.keys(urlData).length === 0 && urlData.constructor === Object) {
-			res.sendStatus(404);
-			return;
-		}
+		let urlData = res.locals.urlData;
+
 		let noPassword = await bcrypt.compare("no", urlData.password);
 		if(!noPassword) {
 			res.render("passwordNeeded.njk", {shortUrl:shortUrl, message:"Password Required", csrfToken:req.csrfToken()});
 			return;
 		}
-		let pwdBuff = Buffer.from("no");
-	
-		let iv = Buffer.from(urlData.iv, "hex");
-		let salt = Buffer.from(urlData.salt, "hex");
-	
-		let derivedKeyBuffer = await promisfyCryptoScrypt(pwdBuff, salt, 32);
 
-		let decipher = crypto.createDecipheriv("aes-256-cbc", derivedKeyBuffer, iv);
-		let decrypted = decipher.update(urlData.longURL, "hex", "utf8");
-		decrypted += decipher.final("utf8");
+		let decrypted = await decrypt(urlData, "no");
+
 		req.session.lastAttempt = undefined;
 		res.redirect(decrypted);
 	} catch (error) {
@@ -104,18 +114,11 @@ async function linkGet(req, res) {
 
 async function linkPost(req, res) {
 	var shortUrl = req.params.id;
-	if(!shortUrl) {
-		res.redirect("/");
-		return;
-	}
 
 	req.session.lastAttempt = Date.now();
 	try {
-		let urlData = await dbQueries.getURL(shortUrl);
-		if(Object.keys(urlData).length === 0 && urlData.constructor === Object) {
-			res.sendStatus(404);
-			return;
-		}
+		let urlData = res.locals.urlData;
+
 		let password = "no";
 		let noPassword = await bcrypt.compare(password, urlData.password);
 		if(!noPassword) {
@@ -132,16 +135,8 @@ async function linkPost(req, res) {
 			}
 		}
 
-		let pwdBuff = Buffer.from(password);
-	
-		let iv = Buffer.from(urlData.iv, "hex");
-		let salt = Buffer.from(urlData.salt, "hex");
-	
-		let derivedKeyBuffer = await promisfyCryptoScrypt(pwdBuff, salt, 32);
+		let decrypted = await decrypt(urlData, password);
 
-		let decipher = crypto.createDecipheriv("aes-256-cbc", derivedKeyBuffer, iv);
-		let decrypted = decipher.update(urlData.longURL, "hex", "utf8");
-		decrypted += decipher.final("utf8");
 		req.session.lastAttempt = undefined;
 		res.redirect(decrypted);
 	} catch (error) {
@@ -200,7 +195,7 @@ async function shorternPost(req, res) {
 		let response = await dbQueries.addURL(shortUrl, dataToSave);
 
 		if(response == "OK") {
-			res.render("created.njk", {shortUrl: `req.hostname/i/${shortUrl}`, password: password});
+			res.render("created.njk", {shortUrl: `${req.hostname}/i/${shortUrl}`, password: password});
 		} else {
 			throw new Error("Can't add to redis");
 		}
@@ -210,6 +205,24 @@ async function shorternPost(req, res) {
 			res.sendStatus(500);
 			return;
 		}
+	}
+}
+
+async function decrypt(urlData, password) {
+	try {
+		let pwdBuff = Buffer.from(password);
+
+		let iv = Buffer.from(urlData.iv, "hex");
+		let salt = Buffer.from(urlData.salt, "hex");
+
+		let derivedKeyBuffer = await promisfyCryptoScrypt(pwdBuff, salt, 32);
+
+		let decipher = crypto.createDecipheriv("aes-256-cbc", derivedKeyBuffer, iv);
+		let decrypted = decipher.update(urlData.longURL, "hex", "utf8");
+		decrypted += decipher.final("utf8");
+		return decrypted;
+	} catch (error) {
+		throw error;
 	}
 }
 
