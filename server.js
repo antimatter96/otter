@@ -55,8 +55,6 @@ sessionConfig.store = new RedisStore(CONFIG.redisConfig);
 
 app.use(session(sessionConfig));
 
-var client = redis.createClient(CONFIG.redisConfig);
-
 //==================================
 // CUSTOM MIDDLEWARE
 //==================================
@@ -70,6 +68,8 @@ app.use(function(req, res, next) {
 	res.setHeader("X-XSS-Protection", "1; mode=block");
 	next();
 });
+
+var formTamperedWithError = "Form Tampered With (- _ -)";
 
 //=====================================================
 // ROUTES
@@ -86,7 +86,7 @@ app.use(function(req, res, _next) {
 	res.status(404);
 	res.format({
 		html: function() {
-			res.render("404.njk")
+			res.render("404.njk");
 		},
 		json: function() {
 			res.json({ error: "Not found" });
@@ -102,7 +102,7 @@ app.use(function(err, req, res, next) {
 		next();
 	} else if (err.code === "EBADCSRFTOKEN") {
 		res.status(403);
-		res.send("CSRF Token Expired OR FORM TAMPERED WITH");
+		res.send(formTamperedWithError);
 		res.end();
 	} else {
 		next(err);
