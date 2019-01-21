@@ -2,48 +2,72 @@
 <html>
 	<head>
 		<title>Home</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 		<link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon">
 		<link rel="icon" href="static/favicon.ico" type="image/x-icon">
-		<link rel="stylesheet" type="text/css" href="static/pure.css">
-		<link rel="stylesheet" type="text/css" href="static/main.css">
+		<link rel="stylesheet" type="text/css" href="static/spectre.css">
 	</head>
 	<body>
 		<header>
+			<div class="centered text-center">
+				<h1>Otter</h1>
+			</div>
+			<div class="divider"></div>
 		</header>
-		<section class="pure-g">
-			<div class="pure-u-3-24"></div>
-			<form action="/shorten" method="post" class="pure-u-18-24 pure-form pure-g">
-				<div class="pure-u-24-24">
-					<input id="url" class="pure-input-1 pure-input-noborder" name="url" type="url" placeholder="URL to shorten" required onblur="checkURL(this)">
+		<section class="container">
+			<div class="columns">
+				<!--<div class="column col-gapless col-4 hide-xs col-sm-3"></div>-->
+				<div class="column col-gapless col-4 col-xs-12 col-sm-6 centered">
+					<form action="/shorten" method="post" class="form-horizontal">
+						<input type="hidden" name="_csrf" value="{{csrfToken}}">
+						<div class="form‐group {% if (message.length > 0) %}has-danger{% endif %}">
+							<input class="form-input" id="url" name="url" type="url" placeholder="URL to shorten" required onblur="checkURL(this)">
+							{% if (message.length > 0) %}<span class="form-input-hint">{{ message }}</span>{% endif %}
+						</div>
+						<div class="form-group text-center">
+							<label class="form-checkbox text-center">
+								<input type="checkbox" id="hasPwd" name="hasPassword">
+								<i class="form-icon"></i>Password Protect
+							</label>
+						</div>
+						<div class="form-group">
+							<input id="pwd" name="password" type="password" placeholder="6 characters minimum" minlength=6 maxlength=63 class="form-input" style="display:none">
+						</div>
+						<div class="form‐group text-center">
+							<button id="submitBtn" type="submit" class="btn btn-primary btn-block">Shorten</button>
+						</div>
+					</form>
 				</div>
-				<br><br>
-				<div class="pure-u-24-24">
-					<div class="pure-u-6-24"></div>
-					<div class="pure-u-12-24">
-					<input id="pwd" class="pure-input-noborder pure-input-1" name="password" placeholder="Password ? min 4 characters" minlength=4 maxlength=63>
-					</div>
-				</div>
-				<br><br>
-				<div class="pure-u-8-24"></div>
-				<div class="pure-u-8-24 text-align-center">
-					<button id="submitBtn" type="submit" class="pure-input-1 pure-button pure-button-primary">Shorten</button>
-				</div>
-				<div class="pure-form-message is-error text-align-center pure-24-24">
-					<br>
-					{% if (message.length > 0) %}{{ message }}{% else %}<br>{% endif %}
-				</div>
-			</form>
-			<div class="pure-u-3-24"></div>
-			<script>
-				function checkURL (input) {
-					var string = input.value;
-					if (!~string.indexOf("http")) {
-						string = "https://" + string;
-					}
-					input.value = string;
-					return input;
-				}
-			</script>
+			</div>
 		</section>
+		<script>
+			function checkURL (input) {
+				var string = input.value;
+				if (!~string.indexOf("http")) {
+					string = "https://" + string;
+				}
+				input.value = string;
+				return input;
+			}
+			
+			function init(){
+				var checkBox = document.getElementById('hasPwd');
+				var passwordInput = document.getElementById('pwd');
+				checkBox.checked = false; //ENFORCE
+				passwordInput.value = null; //ENFORCE
+				checkBox.addEventListener('change',function(e){
+					if(checkBox.checked){
+						passwordInput.style.display = "inherit";
+						passwordInput.required = true;
+					}
+					else{
+						passwordInput.style.display = "none";
+						passwordInput.required = false;
+					}
+				});
+			}
+			window.addEventListener('load',init);	
+		</script>
+			{% include "_footer.njk" %}
 	</body>
 </html>
