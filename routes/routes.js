@@ -24,22 +24,27 @@ var promisfyCryptoScrypt = util.promisify(crypto.scrypt);
 //=====================================================
 
 function rateLimmiter(req, res, next) {
-	console.log(req.session.lastAttempt, Date.now() - req.session.lastAttempt);
 	if (req.session.lastAttempt && Date.now() - req.session.lastAttempt < 5000) {
 		res.sendStatus(429);
 		return;
-	} else {
-		next();
 	}
+	next();
 }
 
 function checkShortUrlPresence(req, res, next) {
 	if(!req.params.id) {
 		res.redirect("/");
 		return;
-	} else {
-		next();
 	}
+	next();
+}
+
+function disallowXHR(req, res, next) {
+	if(req.xhr) {
+		res.sendStatus(403);
+		return;
+	}
+	next();
 }
 
 async function loadShortUrlData(req, res, next) {
@@ -68,9 +73,9 @@ router.get("/", mainGet);
 
 router.get("/new", mainGet);
 router.get("/i/:id", checkShortUrlPresence, loadShortUrlData, linkGet);
-router.post("/i/:id", checkShortUrlPresence, loadShortUrlData, linkPost);
+router.post("/i/:id", disallowXHR, checkShortUrlPresence, loadShortUrlData, linkPost);
 
-router.post("/shorten", shorternPost);
+router.post("/shorten", disallowXHR, shorternPost);
 router.get("/shorten", mainGet);
 
 function mainGet(req, res) {
@@ -149,11 +154,8 @@ async function linkPost(req, res) {
 }
 
 async function shorternPost(req, res) {
-	if(req.xhr) {
-		res.sendStatus(403);
-		return;
-	}
 	var url = req.body.url;
+
 	if(!validator.isURL(url)) {
 		res.redirect("/new?invalid=true");
 		return;
@@ -172,25 +174,7 @@ async function shorternPost(req, res) {
 			}
 		}
 
-		let passwordHash = await bcrypt.hash(password, 10);
-
-		let pwdBuff = Buffer.from(password);
-
-		let iv = crypto.randomBytes(16);
-		let salt = crypto.randomBytes(12);
-
-		let derivedKeyBuffer = await promisfyCryptoScrypt(pwdBuff, salt, 32);
-
-		let cipher = crypto.createCipheriv("aes-256-cbc", derivedKeyBuffer, iv);
-		let encrypted = cipher.update(url, "utf8", "hex");
-		encrypted += cipher.final("hex");
-
-		let dataToSave = {
-			iv: iv.toString("hex"),
-			longURL: encrypted.toString("hex"),
-			salt: salt.toString("hex"),
-			password: passwordHash
-		};
+		let dataToSave = await encrypt(url, password);
 
 		let response = await dbQueries.addURL(shortUrl, dataToSave);
 
@@ -221,6 +205,32 @@ async function decrypt(urlData, password) {
 		let decrypted = decipher.update(urlData.longURL, "hex", "utf8");
 		decrypted += decipher.final("utf8");
 		return decrypted;
+	} catch (error) {
+		throw error;
+	}
+}
+
+async function encrypt(url, password) {
+	try {
+		let passwordHash = await bcrypt.hash(password, 10);
+
+		let pwdBuff = Buffer.from(password);
+
+		let iv = crypto.randomBytes(16);
+		let salt = crypto.randomBytes(12);
+
+		let derivedKeyBuffer = await promisfyCryptoScrypt(pwdBuff, salt, 32);
+
+		let cipher = crypto.createCipheriv("aes-256-cbc", derivedKeyBuffer, iv);
+		let encrypted = cipher.update(url, "utf8", "hex");
+		encrypted += cipher.final("hex");
+
+		return {
+			iv: iv.toString("hex"),
+			longURL: encrypted.toString("hex"),
+			salt: salt.toString("hex"),
+			password: passwordHash
+		};
 	} catch (error) {
 		throw error;
 	}
