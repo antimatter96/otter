@@ -98,6 +98,7 @@ app.use(function(req, res, _next) {
 });
 
 app.use(function(err, req, res, next) {
+	console.log(err);
 	if (!err) {
 		next();
 	} else if (err.code === "EBADCSRFTOKEN") {

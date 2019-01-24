@@ -27,6 +27,7 @@
         "block-scoped-var" :"error",
         "space-before-blocks": "error",
         "guard-for-in": "error",
-        "comma-spacing": ["error", { "before": false, "after": true }]
+        "comma-spacing": ["error", { "before": false, "after": true }],
+        "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
     }
 }
