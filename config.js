@@ -1,3 +1,6 @@
+const fs = require("fs");
+const path = require("path");
+
 const config = {};
 
 config.nunjucksConfig = {};
@@ -28,9 +31,16 @@ config.port = 8000;
 if (process.env.PRO == 1) {
 	console.log("Using Production");
 	config.nunjucksConfig.noCache = false;
-	config.sessionConfig.secret = "secrcetodfw4sege34yhsaeffgh65d890tce5664esx0drandomlygenerated";
-	config.redisConfig = {};
-	config.port = process.env.PORT;
+	config.sessionConfig.secret = process.env.SESSION_SECRET;
+	config.redisConfig = {
+		host: process.env.REDIS_HOST,
+		port: process.env.REDIS_PORT,
+		password: process.env.REDIS_PASSWORD
+	};
+	config.port = process.env.PORT || 8080;
+	config.accessLogStream = null;
+} else {
+	config.accessLogStream = fs.createWriteStream(path.join(__dirname, "access.log"), { flags: "a" });
 }
 
 module.exports = config;
