@@ -24,6 +24,18 @@
 					<button data-clipboard-target="#shortUrl" id="clipboardBtn" class="btn" >Add To Clipboard</button>
 				</div>
 			</div>
+			{% if password.length != "no" %}
+			<div class="columns">
+				<div class="form-group" id="password-containter-1">
+					<label for="url_password">Password</label>
+					<input name="password" type="password" id="url_password" class="form-input" value="{{ password }}">
+					<label class="form-checkbox text-center" onclick="showHidePassword()">
+						<input type="checkbox" id="hasPwd" name="hasPassword" onclick="showHidePassword()">
+						<i class="form-icon"></i>Show Password
+					</label>
+				</div>
+			</div>
+			{% endif %}
 			<div class="divider"></div>
 			<br>
 			<div class="columns">
@@ -39,9 +51,23 @@
 		</section>
 		<img id="img-buffer" src="static/otter.jpg" style="display:none;">
 		<script>
+			function showHidePassword() {
+				let x = document.getElementById("url_password");
+				if (x.type === "password") {
+					x.type = "text";
+				} else {
+					x.type = "password";
+				}
+			}
+			function init() {
+				var shortURL = "{{ shortUrl }}"
+				window.history.pushState(null, 'Created', `/i/${shortURL}`);
+			}
+			window.addEventListener('load', init);
 			var el = kjua({text: '{{shortUrl}}',render:'image',crisp:true,minVersion:10,ecLevel:'H',size:250,fill:"#000",mode:'image',quiet:0,image:document.getElementById('img-buffer')});
 			document.getElementById("qrCode").appendChild(el);
 			new Clipboard("#clipboardBtn");
 		</script>
+		{% include "_footer.njk" %}
 	</body>
 </html>

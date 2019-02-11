@@ -31,17 +31,17 @@ function rateLimmiter(req, res, next) {
 	next();
 }
 
-function checkShortUrlPresence(req, res, next) {
-	if(!req.params.id) {
-		res.redirect("/");
+function disallowXHR(req, res, next) {
+	if(req.xhr) {
+		res.sendStatus(403);
 		return;
 	}
 	next();
 }
 
-function disallowXHR(req, res, next) {
-	if(req.xhr) {
-		res.sendStatus(403);
+function checkShortUrlPresence(req, res, next) {
+	if(!req.params.id) {
+		res.redirect("/");
 		return;
 	}
 	next();
@@ -66,14 +66,25 @@ async function loadShortUrlData(req, res, next) {
 
 }
 
+function exposeCSRFToken(req, res, next) {
+	res.locals.csrfToken = req.csrfToken();
+	next();
+}
+
+function loadShortUrl(req, res, next) {
+	res.locals.shortUrl = req.params.id;
+	next();
+}
+
 router.use(rateLimmiter);
 router.use(csrfProtection);
+router.use(exposeCSRFToken);
 
 router.get("/", mainGet);
 
 router.get("/new", mainGet);
-router.get("/i/:id", checkShortUrlPresence, loadShortUrlData, linkGet);
-router.post("/i/:id", disallowXHR, checkShortUrlPresence, loadShortUrlData, linkPost);
+router.get("/i/:id", checkShortUrlPresence, loadShortUrlData, loadShortUrl, linkGet);
+router.post("/i/:id", disallowXHR, checkShortUrlPresence, loadShortUrlData, loadShortUrl, linkPost);
 
 router.post("/shorten", disallowXHR, shorternPost);
 router.get("/shorten", mainGet);
@@ -82,25 +93,19 @@ function mainGet(req, res) {
 	if (req.query.invalid && req.query.invalid === "true") {
 		res.render("home.njk", {
 			message: "Enter a valid url",
-			csrfToken: req.csrfToken()
 		});
 		return;
 	}
-
-	res.render("home.njk", {
-		csrfToken: req.csrfToken()
-	});
+	res.render("home.njk");
 }
 
 async function linkGet(req, res) {
-	var shortUrl = req.params.id;
-
 	try {
 		let urlData = res.locals.urlData;
 
 		let noPassword = await bcrypt.compare("no", urlData.password);
 		if(!noPassword) {
-			res.render("passwordNeeded.njk", {shortUrl:shortUrl, message:"Password Required", csrfToken:req.csrfToken()});
+			res.render("passwordNeeded.njk", { message:"Password Required" });
 			return;
 		}
 
@@ -118,8 +123,6 @@ async function linkGet(req, res) {
 }
 
 async function linkPost(req, res) {
-	var shortUrl = req.params.id;
-
 	req.session.lastAttempt = Date.now();
 	try {
 		let urlData = res.locals.urlData;
@@ -129,13 +132,13 @@ async function linkPost(req, res) {
 		if(!noPassword) {
 			password = req.body.password || null;
 			if(!password) {
-				res.render("passwordNeeded.njk", {shortUrl:shortUrl, message:"Password Required", csrfToken:req.csrfToken()});
+				res.render("passwordNeeded.njk", { message:"Password Required" });
 				return;
 			}
 
 			let correctPassword = await bcrypt.compare(password, urlData.password);
 			if(!correctPassword) {
-				res.render("passwordNeeded.njk", {shortUrl:shortUrl, message:"Wrong Password", csrfToken:req.csrfToken()});
+				res.render("passwordNeeded.njk", { message:"Wrong Password" });
 				return;
 			}
 		}
@@ -177,9 +180,9 @@ async function shorternPost(req, res) {
 		let dataToSave = await encrypt(url, password);
 
 		let response = await dbQueries.addURL(shortUrl, dataToSave);
-
 		if(response == "OK") {
-			res.render("created.njk", {shortUrl: `${req.hostname}/i/${shortUrl}`, password: password});
+			res.locals.shortUrl = shortUrl;
+			res.render("created.njk", { password: password});
 		} else {
 			throw new Error("Can't add to redis");
 		}
