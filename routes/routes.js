@@ -1,6 +1,3 @@
-var crypto = require("crypto");
-const util = require("util");
-
 var express = require("express");
 var csrf = require("csurf");
 var validator = require("validator");
@@ -10,14 +7,13 @@ var bcrypt = require("bcryptjs");
 
 var dbQueries = require("../db/queries");
 var config = require("../config");
+var customCrypto = require("../libs/customCrypto");
 
 var router = express.Router();
 
 var csrfProtection = csrf({
 	cookie: false
 });
-
-var promisfyCryptoScrypt = util.promisify(crypto.scrypt);
 
 //=====================================================
 // ROUTES
@@ -109,16 +105,14 @@ async function linkGet(req, res) {
 			return;
 		}
 
-		let decrypted = await decrypt(urlData, "no");
+		let decrypted = await customCrypto.decrypt(urlData, "no");
 
 		req.session.lastAttempt = undefined;
 		res.redirect(decrypted);
 	} catch (error) {
-		if(error) {
-			console.error(error);
-			res.sendStatus(500);
-			return;
-		}
+		console.error(error);
+		res.sendStatus(500);
+		return;
 	}
 }
 
@@ -143,16 +137,14 @@ async function linkPost(req, res) {
 			}
 		}
 
-		let decrypted = await decrypt(urlData, password);
+		let decrypted = await customCrypto.decrypt(urlData, password);
 
 		req.session.lastAttempt = undefined;
 		res.redirect(decrypted);
 	} catch (error) {
-		if(error) {
-			console.error(error);
-			res.sendStatus(500);
-			return;
-		}
+		console.error(error);
+		res.sendStatus(500);
+		return;
 	}
 }
 
@@ -177,7 +169,7 @@ async function shorternPost(req, res) {
 			}
 		}
 
-		let dataToSave = await encrypt(url, password);
+		let dataToSave = await customCrypto.encrypt(url, password);
 
 		let response = await dbQueries.addURL(shortUrl, dataToSave);
 		if(response == "OK") {
@@ -187,55 +179,9 @@ async function shorternPost(req, res) {
 			throw new Error("Can't add to redis");
 		}
 	} catch (error) {
-		if(error) {
-			console.error(error);
-			res.sendStatus(500);
-			return;
-		}
-	}
-}
-
-async function decrypt(urlData, password) {
-	try {
-		let pwdBuff = Buffer.from(password);
-
-		let iv = Buffer.from(urlData.iv, "hex");
-		let salt = Buffer.from(urlData.salt, "hex");
-
-		let derivedKeyBuffer = await promisfyCryptoScrypt(pwdBuff, salt, 32);
-
-		let decipher = crypto.createDecipheriv("aes-256-cbc", derivedKeyBuffer, iv);
-		let decrypted = decipher.update(urlData.longURL, "hex", "utf8");
-		decrypted += decipher.final("utf8");
-		return decrypted;
-	} catch (error) {
-		throw error;
-	}
-}
-
-async function encrypt(url, password) {
-	try {
-		let passwordHash = await bcrypt.hash(password, 10);
-
-		let pwdBuff = Buffer.from(password);
-
-		let iv = crypto.randomBytes(16);
-		let salt = crypto.randomBytes(12);
-
-		let derivedKeyBuffer = await promisfyCryptoScrypt(pwdBuff, salt, 32);
-
-		let cipher = crypto.createCipheriv("aes-256-cbc", derivedKeyBuffer, iv);
-		let encrypted = cipher.update(url, "utf8", "hex");
-		encrypted += cipher.final("hex");
-
-		return {
-			iv: iv.toString("hex"),
-			longURL: encrypted.toString("hex"),
-			salt: salt.toString("hex"),
-			password: passwordHash
-		};
-	} catch (error) {
-		throw error;
+		console.error(error);
+		res.sendStatus(500);
+		return;
 	}
 }
 
