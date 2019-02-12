@@ -20,7 +20,7 @@
     "csurf": "*"
   },
   "scripts": {
-    "test": "jest",
+    "test": "NODE_ENV=test jest --silent=false --verbose=true --runInBand",
     "start": "node server.js"
   },
   "author": "Arpit Jain",

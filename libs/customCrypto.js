@@ -7,8 +7,11 @@ var promisfyCryptoScrypt = util.promisify(crypto.scrypt);
 async function decrypt(urlData, password) {
 	if (!password || !urlData ||
 		!urlData.iv || !urlData.salt || !urlData.longURL) {
-		throw new Error("Missing fields");
+		return new Promise((resolve, reject) => {
+			reject("Critical: Missing Fields");
+		});
 	}
+
 	try {
 		let pwdBuff = Buffer.from(password);
 
@@ -20,13 +23,23 @@ async function decrypt(urlData, password) {
 		let decipher = crypto.createDecipheriv("aes-256-cbc", derivedKeyBuffer, iv);
 		let decrypted = decipher.update(urlData.longURL, "hex", "utf8");
 		decrypted += decipher.final("utf8");
-		return decrypted;
+		return new Promise((resolve, reject) => {
+			resolve(decrypted);
+		});
 	} catch (error) {
-		throw error;
+		return new Promise((resolve, reject) => {
+			reject(error);
+		});
 	}
 }
 
 async function encrypt(url, password) {
+	if (!password || !url) {
+		return new Promise((resolve, reject) => {
+			reject("Critical: Missing Fields");
+		});
+	}
+
 	try {
 		let passwordHash = await bcrypt.hash(password, 10);
 
@@ -41,14 +54,18 @@ async function encrypt(url, password) {
 		let encrypted = cipher.update(url, "utf8", "hex");
 		encrypted += cipher.final("hex");
 
-		return {
-			iv: iv.toString("hex"),
-			longURL: encrypted.toString("hex"),
-			salt: salt.toString("hex"),
-			password: passwordHash,
-		};
+		return new Promise((resolve, reject) => {
+			resolve({
+				iv: iv.toString("hex"),
+				longURL: encrypted.toString("hex"),
+				salt: salt.toString("hex"),
+				password: passwordHash,
+			});
+		});
 	} catch (error) {
-		throw error;
+		return new Promise((resolve, reject) => {
+			reject(error);
+		});
 	}
 }
 
