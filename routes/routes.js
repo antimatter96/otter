@@ -16,7 +16,7 @@ var csrfProtection = csrf({
 });
 
 //=====================================================
-// ROUTES
+// Middlewares
 //=====================================================
 
 function rateLimmiter(req, res, next) {
@@ -28,7 +28,7 @@ function rateLimmiter(req, res, next) {
 }
 
 function disallowXHR(req, res, next) {
-	if(req.xhr) {
+	if (req.xhr) {
 		res.sendStatus(403);
 		return;
 	}
@@ -36,7 +36,7 @@ function disallowXHR(req, res, next) {
 }
 
 function checkShortUrlPresence(req, res, next) {
-	if(!req.params.id) {
+	if (!req.params.id) {
 		res.redirect("/");
 		return;
 	}
@@ -72,6 +72,11 @@ function loadShortUrl(req, res, next) {
 	next();
 }
 
+
+//=====================================================
+// Router
+//=====================================================
+
 router.use(rateLimmiter);
 router.use(csrfProtection);
 router.use(exposeCSRFToken);
@@ -84,6 +89,10 @@ router.post("/i/:id", disallowXHR, checkShortUrlPresence, loadShortUrlData, load
 
 router.post("/shorten", disallowXHR, shorternPost);
 router.get("/shorten", mainGet);
+
+//=====================================================
+// Routes
+//=====================================================
 
 function mainGet(req, res) {
 	if (req.query.invalid && req.query.invalid === "true") {
@@ -100,7 +109,7 @@ async function linkGet(req, res) {
 		let urlData = res.locals.urlData;
 
 		let noPassword = await bcrypt.compare("no", urlData.password);
-		if(!noPassword) {
+		if (!noPassword) {
 			res.render("passwordNeeded.njk", { message:"Password Required" });
 			return;
 		}
@@ -123,15 +132,15 @@ async function linkPost(req, res) {
 
 		let password = "no";
 		let noPassword = await bcrypt.compare(password, urlData.password);
-		if(!noPassword) {
+		if (!noPassword) {
 			password = req.body.password || null;
-			if(!password) {
+			if (!password) {
 				res.render("passwordNeeded.njk", { message:"Password Required" });
 				return;
 			}
 
 			let correctPassword = await bcrypt.compare(password, urlData.password);
-			if(!correctPassword) {
+			if (!correctPassword) {
 				res.render("passwordNeeded.njk", { message:"Wrong Password" });
 				return;
 			}
@@ -151,7 +160,7 @@ async function linkPost(req, res) {
 async function shorternPost(req, res) {
 	var url = req.body.url;
 
-	if(!validator.isURL(url)) {
+	if (!validator.isURL(url)) {
 		res.redirect("/new?invalid=true");
 		return;
 	}
@@ -164,7 +173,7 @@ async function shorternPost(req, res) {
 		while(true) {
 			shortUrl = rndm.base62(7);
 			let present = await dbQueries.checkURL(shortUrl);
-			if(present == 0) {
+			if (present == 0) {
 				break;
 			}
 		}
@@ -172,7 +181,7 @@ async function shorternPost(req, res) {
 		let dataToSave = await customCrypto.encrypt(url, password);
 
 		let response = await dbQueries.addURL(shortUrl, dataToSave);
-		if(response == "OK") {
+		if (response == "OK") {
 			res.locals.shortUrl = shortUrl;
 			res.render("created.njk", { password: password});
 		} else {

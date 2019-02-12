@@ -5,6 +5,10 @@ var bcrypt = require("bcryptjs");
 var promisfyCryptoScrypt = util.promisify(crypto.scrypt);
 
 async function decrypt(urlData, password) {
+	if (!password || !urlData ||
+		!urlData.iv || !urlData.salt || !urlData.longURL) {
+		throw new Error("Missing fields");
+	}
 	try {
 		let pwdBuff = Buffer.from(password);
 
