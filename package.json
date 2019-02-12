@@ -27,5 +27,18 @@
   "license": "ISC",
   "devDependencies": {
     "jest": "^23.6.0"
+  },
+  "jest": {
+    "verbose": true,
+    "testURL": "http://localhost/",
+    "collectCoverage": true,
+    "coverageReporters": [
+      "json",
+      "html"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/test/_not_used/",
+      "<rootDir>/node_modules/"
+    ]
   }
 }
