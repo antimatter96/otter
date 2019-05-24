@@ -34,7 +34,8 @@
     "collectCoverage": true,
     "coverageReporters": [
       "json",
-      "html"
+      "html",
+      "lcov"
     ],
     "testPathIgnorePatterns": [
       "<rootDir>/test/_not_used/",
