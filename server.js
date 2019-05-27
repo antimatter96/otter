@@ -4,16 +4,13 @@ var bodyParser = require("body-parser");
 var cookieParser = require("cookie-parser");
 var session = require("express-session");
 var RedisStore = require("connect-redis")(session);
-var redis = require("ioredis");
+
 var favicon = require("serve-favicon");
-var csrf = require("csurf");
 
 var CONFIG = require("./config");
 
 // Logging
-var fs = require("fs");
 var morgan = require("morgan");
-var path = require("path");
 
 //==============================
 // APP SETUP

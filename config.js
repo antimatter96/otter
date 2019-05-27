@@ -18,7 +18,7 @@ config.sessionConfig = {
 	saveUninitialized: false,
 	name: "appSessionId",
 	cookie: { maxAge: 43200000 },
-	secret : "secretkeyoflength256bits",
+	secret : "secretkeyoflasdasdasdasdasdasdasdength256bits",
 };
 
 config.redisConfig = {
