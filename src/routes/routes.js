@@ -6,7 +6,7 @@ var rndm = require("rndm");
 var bcrypt = require("bcryptjs");
 
 var dbQueries = require("../db/queries");
-var config = require("../config");
+var config = require("./../../config");
 var customCrypto = require("../libs/customCrypto");
 
 var router = express.Router();
