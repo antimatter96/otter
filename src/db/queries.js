@@ -1,19 +1,17 @@
-var client = require("./redis.js");
+function init(redisConfig) {
+	var client = require("./redis.js")(redisConfig);
 
-function getURL(shortURL) {
-	return client.hgetall(shortURL);
+	return {
+		getURL: function (shortURL) {
+			return client.hgetall(shortURL);
+		},
+		checkURL: function(shortURL) {
+			return client.hexists(shortURL, "longURL");
+		},
+		addURL: function(shortURL, data) {
+			return client.hmset(shortURL, data);
+		}
+	};
 }
 
-function checkURL(shortURL) {
-	return client.hexists(shortURL, "longURL");
-}
-
-function addURL(shortURL, data) {
-	return client.hmset(shortURL, data);
-}
-
-module.exports = {
-	checkURL: checkURL,
-	addURL: addURL,
-	getURL: getURL
-};
+module.exports = init;

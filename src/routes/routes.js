@@ -5,8 +5,7 @@ var normalizeUrl = require("normalize-url");
 var rndm = require("rndm");
 var bcrypt = require("bcryptjs");
 
-var dbQueries = require("../db/queries");
-var config = require("./../../config");
+var dbQueries;
 var customCrypto = require("../libs/customCrypto");
 
 var router = express.Router();
@@ -194,4 +193,10 @@ async function shorternPost(req, res) {
 	}
 }
 
-module.exports = router;
+module.exports = init;
+
+
+function init(CONFIG) {
+	dbQueries = require("../db/queries")(CONFIG.redisConfig);
+	return router;
+}

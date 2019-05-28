@@ -1,11 +1,13 @@
-var bcrypt = require("bcryptjs");
-jest.mock("bcryptjs");
+
 
 describe("customCrypto.js", function () {
 
-	describe("decrypt", function () {
+	beforeEach(() => {
+		jest.resetModules();
+	});
 
-		var customCrypto = require("../../libs/customCrypto");
+	describe("decrypt", function () {
+		var customCryptoD = require("../../src/libs/customCrypto");
 
 		beforeEach(() => {
 			jest.clearAllMocks();
@@ -25,7 +27,7 @@ describe("customCrypto.js", function () {
 
 			test("Both fields", async () => {
 				let args = [];
-				await expect(customCrypto.decrypt(...args)).rejects.toMatch("Critical: Missing Fields");
+				await expect(customCryptoD.decrypt(...args)).rejects.toMatch("Critical: Missing Fields");
 			});
 
 			test("One field", async () => {
@@ -34,12 +36,12 @@ describe("customCrypto.js", function () {
 					"iv": "asd",
 					"longURL": "asd",
 				}];
-				await expect(customCrypto.decrypt(...args)).rejects.toMatch("Critical: Missing Fields");
+				await expect(customCryptoD.decrypt(...args)).rejects.toMatch("Critical: Missing Fields");
 			});
 
 			test("One field", async () => {
 				let args = [undefined, "password"];
-				await expect(customCrypto.decrypt(...args)).rejects.toMatch("Critical: Missing Fields");
+				await expect(customCryptoD.decrypt(...args)).rejects.toMatch("Critical: Missing Fields");
 			});
 
 			test("Keys in urlData", async () => {
@@ -48,7 +50,7 @@ describe("customCrypto.js", function () {
 					"salt": "asd",
 					"longURL": "asd",
 				}, "password"];
-				await expect(customCrypto.decrypt(...args)).rejects.toMatch("Critical: Missing Fields");
+				await expect(customCryptoD.decrypt(...args)).rejects.toMatch("Critical: Missing Fields");
 			});
 
 			test("Keys in urlData", async () => {
@@ -57,7 +59,7 @@ describe("customCrypto.js", function () {
 					"salt": "",
 					"longURL": "asd",
 				}, "password"];
-				await expect(customCrypto.decrypt(...args)).rejects.toMatch("Critical: Missing Fields");
+				await expect(customCryptoD.decrypt(...args)).rejects.toMatch("Critical: Missing Fields");
 			});
 
 			test("Keys in urlData", async () => {
@@ -66,7 +68,7 @@ describe("customCrypto.js", function () {
 					"salt": "asd",
 					"longURL": "",
 				}, "password"];
-				await expect(customCrypto.decrypt(...args)).rejects.toMatch("Critical: Missing Fields");
+				await expect(customCryptoD.decrypt(...args)).rejects.toMatch("Critical: Missing Fields");
 			});
 
 			test("Does not throw ", async () => {
@@ -85,7 +87,7 @@ describe("customCrypto.js", function () {
 					"salt": "will_not_throw",
 					"iv": "will_not_throw",
 				}, "will_not_throw"];
-				let x = customCrypto.decrypt(...args);
+				let x = customCryptoD.decrypt(...args);
 				x.catch((_e) => {});
 				expect(bufferCreationMock).toBeCalled();
 				Buffer.from = beforeMock;
@@ -93,11 +95,59 @@ describe("customCrypto.js", function () {
 
 		});
 
+		describe("Throws error on malformed fields", function () {
+
+			beforeEach(() => {
+				jest.clearAllMocks();
+			});
+			afterEach(() => {
+				jest.clearAllMocks();
+			});
+
+			test("Invalid IV Length", async () => {
+				let args = [{
+					"longURL": "will_not_throw",
+					"salt": "will_not_throw",
+					"iv": "__TOO_SMALL__",
+				}, "will_not_throw"];
+				await expect(customCryptoD.decrypt(...args)).rejects.toHaveProperty("message", "Invalid IV length");
+			});
+
+		});
+
+		describe("Works", function () {
+
+			var longURLEncrypted, salt, iv;
+			var longURL = "www.url.com";
+			var password = "this_is_a_password";
+			beforeEach(async () => {
+				let args = [longURL, password];
+				let x = await customCryptoD.encrypt(...args);
+				iv = x.iv;
+				salt = x.salt;
+				longURLEncrypted = x.longURL;
+				jest.clearAllMocks();
+			});
+			afterEach(() => {
+				jest.clearAllMocks();
+			});
+
+			test("Invalid IV Length", async () => {
+				let args = [{
+					"longURL": longURLEncrypted,
+					"salt": salt,
+					"iv": iv,
+				}, password];
+				await expect(customCryptoD.decrypt(...args)).resolves.toBe(longURL);
+			});
+
+		});
+
 	});
 
-	describe("decrypt", function () {
+	describe("encrypt", function () {
 
-		var customCrypto = require("../../libs/customCrypto");
+		var customCrypto = require("../../src/libs/customCrypto");
 
 		beforeEach(() => {
 			jest.clearAllMocks();
@@ -119,21 +169,27 @@ describe("customCrypto.js", function () {
 				let args = [];
 				await expect(customCrypto.encrypt(...args)).rejects.toMatch("Critical: Missing Fields");
 			});
+
 			test("One field", async () => {
 				let args = ["url", undefined];
 				await expect(customCrypto.encrypt(...args)).rejects.toMatch("Critical: Missing Fields");
 			});
+
 			test("One field", async () => {
 				let args = [undefined, "pwd"];
 				await expect(customCrypto.encrypt(...args)).rejects.toMatch("Critical: Missing Fields");
 			});
 
 			test("Does not throw", async () => {
-				var customCrypto2 = require("../../libs/customCrypto");
+				jest.doMock("bcryptjs", () => {
+					return { hash: jest.fn(() => 1) };
+				});
+				var customCryptoE = require("../../src/libs/customCrypto");
+				var bcrypt = require("bcryptjs");
 				let args = ["will_not_throw", "will_not_throw"];
-				customCrypto2.encrypt(...args);
+				customCryptoE.encrypt(...args);
 				expect(bcrypt.hash).toBeCalled();
-				jest.unmock("bcryptjs");
+				jest.dontMock("bcryptjs");
 			});
 
 		});

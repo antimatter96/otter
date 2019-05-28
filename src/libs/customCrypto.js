@@ -23,11 +23,11 @@ async function decrypt(urlData, password) {
 		let decipher = crypto.createDecipheriv("aes-256-cbc", derivedKeyBuffer, iv);
 		let decrypted = decipher.update(urlData.longURL, "hex", "utf8");
 		decrypted += decipher.final("utf8");
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve, _reject) => {
 			resolve(decrypted);
 		});
 	} catch (error) {
-		return new Promise((resolve, reject) => {
+		return new Promise((_resolve, reject) => {
 			reject(error);
 		});
 	}
@@ -54,7 +54,7 @@ async function encrypt(url, password) {
 		let encrypted = cipher.update(url, "utf8", "hex");
 		encrypted += cipher.final("hex");
 
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve, _reject) => {
 			resolve({
 				iv: iv.toString("hex"),
 				longURL: encrypted.toString("hex"),
@@ -63,7 +63,7 @@ async function encrypt(url, password) {
 			});
 		});
 	} catch (error) {
-		return new Promise((resolve, reject) => {
+		return new Promise((_resolve, reject) => {
 			reject(error);
 		});
 	}

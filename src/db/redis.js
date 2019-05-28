@@ -1,8 +1,7 @@
 var redis = require("ioredis");
 
-var redisConfig = require("./../../config").redisConfig;
+function createClient(redisConfig) {
+	return redis.createClient(redisConfig);
+}
 
-
-var client = redis.createClient(redisConfig);
-
-module.exports = client;
+module.exports = createClient;
