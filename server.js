@@ -59,13 +59,13 @@ app.use(session(sessionConfig));
 //==================================
 
 app.use(function(req, res, next) {
-	res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-	res.setHeader("Content-Security-Policy", "frame-ancestors 'none'");
-	res.setHeader("X-Content-Type-Options", "nosniff");
-	res.setHeader("X-Frame-Options", "DENY");
-	res.setHeader("X-Powered-By", "none");
-	res.setHeader("X-XSS-Protection", "1; mode=block");
-	next();
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Content-Security-Policy", "frame-ancestors 'none'");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("X-Powered-By", "none");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  next();
 });
 
 var formTamperedWithError = "Form Tampered With (- _ -)";
@@ -82,42 +82,42 @@ app.use("/", routes);
 // ==
 
 app.use(function(req, res, _next) {
-	res.status(404);
-	res.format({
-		html: function() {
-			res.render("404.njk");
-		},
-		json: function() {
-			res.json({ error: "Not found" });
-		},
-		default: function() {
-			res.type("txt").send("Not found");
-		}
-	});
+  res.status(404);
+  res.format({
+    html: function() {
+      res.render("404.njk");
+    },
+    json: function() {
+      res.json({ error: "Not found" });
+    },
+    default: function() {
+      res.type("txt").send("Not found");
+    }
+  });
 });
 
 app.use(function(err, req, res, next) {
-	console.log(err);
-	if (!err) {
-		next();
-	} else if (err.code === "EBADCSRFTOKEN") {
-		res.status(403);
-		res.send(formTamperedWithError);
-		res.end();
-	} else {
-		next(err);
-	}
+  console.log(err);
+  if (!err) {
+    next();
+  } else if (err.code === "EBADCSRFTOKEN") {
+    res.status(403);
+    res.send(formTamperedWithError);
+    res.end();
+  } else {
+    next(err);
+  }
 });
 
 app.use(function(err, req, res) {
-	console.log("ERROR =>> ", err);
-	res.status(err.status || 500);
-	res.render("error", {
-		message: err.message,
-		error: {}
-	});
+  console.log("ERROR =>> ", err);
+  res.status(err.status || 500);
+  res.render("error", {
+    message: err.message,
+    error: {}
+  });
 });
 
 app.listen(app.get("port"), function() {
-	console.log("Running on port " + app.get("port"));
+  console.log("Running on port " + app.get("port"));
 });
