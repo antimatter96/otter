@@ -26,6 +26,6 @@
 	"author": "Arpit Jain",
 	"license": "ISC",
 	"devDependencies": {
-		"jest": "^23.6.0"
+		"mocha": "^6.2.1"
 	}
 }
