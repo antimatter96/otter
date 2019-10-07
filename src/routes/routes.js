@@ -169,12 +169,14 @@ async function shorternPost(req, res) {
 
 	try {
 
-		while(true) {
+		let attempts = 0;
+		while(true && attempts < 5) {
 			shortUrl = rndm.base62(7);
 			let present = await dbQueries.checkURL(shortUrl);
 			if (present == 0) {
 				break;
 			}
+			attempts++;
 		}
 
 		let dataToSave = await customCrypto.encrypt(url, password);
