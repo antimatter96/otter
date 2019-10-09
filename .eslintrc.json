@@ -10,7 +10,7 @@
     "rules": {
         "indent": [
             "error",
-            "tab"
+            2
         ],
         "linebreak-style": [
             "error",
@@ -27,7 +27,7 @@
         "block-scoped-var" :"error",
         "space-before-blocks": "error",
         "guard-for-in": "error",
-        "comma-spacing": ["error", { "before": false, "after": true }],
-        "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
+        "comma-spacing": [ "error", { "before": false, "after": true } ],
+        "no-unused-vars": [ "error", { "argsIgnorePattern": "^_" } ]
     }
 }
