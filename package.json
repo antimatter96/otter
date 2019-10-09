@@ -4,20 +4,20 @@
 	"description": "URL Shortner",
 	"main": "server.js",
 	"dependencies": {
-		"bcryptjs": "*",
+		"bcrypt": "*",
 		"body-parser": "*",
 		"connect-redis": "*",
 		"cookie-parser": "*",
+		"csurf": "*",
 		"express": "*",
 		"express-session": "*",
+		"ioredis": "^4.14.1",
 		"morgan": "*",
 		"normalize-url": "*",
 		"nunjucks": "*",
-		"ioredis": "*",
 		"rndm": "*",
 		"serve-favicon": "*",
-		"validator": "*",
-		"csurf": "*"
+		"validator": "*"
 	},
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",

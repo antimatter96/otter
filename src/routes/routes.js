@@ -1,15 +1,12 @@
-var crypto = require("crypto");
-const util = require("util");
-
 var express = require("express");
 var csrf = require("csurf");
 var validator = require("validator");
 var normalizeUrl = require("normalize-url");
 var rndm = require("rndm");
-var bcrypt = require("bcryptjs");
+var bcrypt = require("bcrypt");
 
-var dbQueries = require("../db/queries");
-var config = require("../config");
+var dbQueries;
+var customCrypto = require("../libs/customCrypto");
 
 var router = express.Router();
 
@@ -17,11 +14,7 @@ var csrfProtection = csrf({
   cookie: false
 });
 
-var promisfyCryptoScrypt = util.promisify(crypto.scrypt);
-
-//=====================================================
-// ROUTES
-//=====================================================
+// Middlewares
 
 function rateLimmiter(req, res, next) {
   if (req.session.lastAttempt && Date.now() - req.session.lastAttempt < 5000) {
@@ -32,7 +25,7 @@ function rateLimmiter(req, res, next) {
 }
 
 function disallowXHR(req, res, next) {
-  if(req.xhr) {
+  if (req.xhr) {
     res.sendStatus(403);
     return;
   }
@@ -40,7 +33,7 @@ function disallowXHR(req, res, next) {
 }
 
 function checkShortUrlPresence(req, res, next) {
-  if(!req.params.id) {
+  if (!req.params.id) {
     res.redirect("/");
     return;
   }
@@ -58,7 +51,7 @@ async function loadShortUrlData(req, res, next) {
       res.locals.urlData = urlData;
       next();
     }
-  } catch(error) {
+  } catch (error) {
     console.error(error);
     res.sendStatus(500);
     return;
@@ -79,6 +72,7 @@ function loadShortUrl(req, res, next) {
 router.use(rateLimmiter);
 router.use(csrfProtection);
 router.use(exposeCSRFToken);
+
 
 router.get("/", mainGet);
 
@@ -104,21 +98,19 @@ async function linkGet(req, res) {
     let urlData = res.locals.urlData;
 
     let noPassword = await bcrypt.compare("no", urlData.password);
-    if(!noPassword) {
-      res.render("passwordNeeded.njk", { message:"Password Required" });
+    if (!noPassword) {
+      res.render("passwordNeeded.njk", { message: "Password Required" });
       return;
     }
 
-    let decrypted = await decrypt(urlData, "no");
+    let decrypted = await customCrypto.decrypt(urlData, "no");
 
     req.session.lastAttempt = undefined;
     res.redirect(decrypted);
   } catch (error) {
-    if(error) {
-      console.error(error);
-      res.sendStatus(500);
-      return;
-    }
+    console.error(error);
+    res.sendStatus(500);
+    return;
   }
 }
 
@@ -129,37 +121,35 @@ async function linkPost(req, res) {
 
     let password = "no";
     let noPassword = await bcrypt.compare(password, urlData.password);
-    if(!noPassword) {
+    if (!noPassword) {
       password = req.body.password || null;
-      if(!password) {
-        res.render("passwordNeeded.njk", { message:"Password Required" });
+      if (!password) {
+        res.render("passwordNeeded.njk", { message: "Password Required" });
         return;
       }
 
       let correctPassword = await bcrypt.compare(password, urlData.password);
-      if(!correctPassword) {
-        res.render("passwordNeeded.njk", { message:"Wrong Password" });
+      if (!correctPassword) {
+        res.render("passwordNeeded.njk", { message: "Wrong Password" });
         return;
       }
     }
 
-    let decrypted = await decrypt(urlData, password);
+    let decrypted = await customCrypto.decrypt(urlData, password);
 
     req.session.lastAttempt = undefined;
     res.redirect(decrypted);
   } catch (error) {
-    if(error) {
-      console.error(error);
-      res.sendStatus(500);
-      return;
-    }
+    console.error(error);
+    res.sendStatus(500);
+    return;
   }
 }
 
 async function shorternPost(req, res) {
   var url = req.body.url;
 
-  if(!validator.isURL(url)) {
+  if (!validator.isURL(url)) {
     res.redirect("/new?invalid=true");
     return;
   }
@@ -169,74 +159,34 @@ async function shorternPost(req, res) {
 
   try {
 
-    while(true) {
+    while (true) {
       shortUrl = rndm.base62(7);
       let present = await dbQueries.checkURL(shortUrl);
-      if(present == 0) {
+      if (present == 0) {
         break;
       }
     }
 
-    let dataToSave = await encrypt(url, password);
+    let dataToSave = await customCrypto.encrypt(url, password);
 
     let response = await dbQueries.addURL(shortUrl, dataToSave);
-    if(response == "OK") {
+    if (response == "OK") {
       res.locals.shortUrl = shortUrl;
-      res.render("created.njk", { password: password});
+      res.render("created.njk", { password: password });
     } else {
       throw new Error("Can't add to redis");
     }
   } catch (error) {
-    if(error) {
-      console.error(error);
-      res.sendStatus(500);
-      return;
-    }
+    console.error(error);
+    res.sendStatus(500);
+    return;
   }
 }
 
-async function decrypt(urlData, password) {
-  try {
-    let pwdBuff = Buffer.from(password);
-
-    let iv = Buffer.from(urlData.iv, "hex");
-    let salt = Buffer.from(urlData.salt, "hex");
-
-    let derivedKeyBuffer = await promisfyCryptoScrypt(pwdBuff, salt, 32);
-
-    let decipher = crypto.createDecipheriv("aes-256-cbc", derivedKeyBuffer, iv);
-    let decrypted = decipher.update(urlData.longURL, "hex", "utf8");
-    decrypted += decipher.final("utf8");
-    return decrypted;
-  } catch (error) {
-    throw error;
-  }
+function init(config) {
+  config.redisConfig.type = "redis";
+  dbQueries = require("../db/queries").init(config.redisConfig);
+  return router;
 }
 
-async function encrypt(url, password) {
-  try {
-    let passwordHash = await bcrypt.hash(password, 10);
-
-    let pwdBuff = Buffer.from(password);
-
-    let iv = crypto.randomBytes(16);
-    let salt = crypto.randomBytes(12);
-
-    let derivedKeyBuffer = await promisfyCryptoScrypt(pwdBuff, salt, 32);
-
-    let cipher = crypto.createCipheriv("aes-256-cbc", derivedKeyBuffer, iv);
-    let encrypted = cipher.update(url, "utf8", "hex");
-    encrypted += cipher.final("hex");
-
-    return {
-      iv: iv.toString("hex"),
-      longURL: encrypted.toString("hex"),
-      salt: salt.toString("hex"),
-      password: passwordHash
-    };
-  } catch (error) {
-    throw error;
-  }
-}
-
-module.exports = router;
+module.exports = init;
