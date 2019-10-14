@@ -4,22 +4,25 @@ var bcrypt = require("bcrypt");
 
 var promisfyCryptoScrypt = util.promisify(crypto.scrypt);
 
+var bcryptRounds = 10;
+var scryptRounds = 16384;
+
 async function encrypt(url, password) {
   if (!password || !url) {
-    return new Promise((resolve, reject) => {
-      reject("Critical: Missing Fields");
+    return new Promise((_resolve, reject) => {
+      reject(Error("Critical: Missing Fields"));
     });
   }
 
   try {
-    let passwordHash = await bcrypt.hash(password, 10);
+    let passwordHash = await bcrypt.hash(password, bcryptRounds);
 
     let pwdBuff = Buffer.from(password);
 
     let iv = crypto.randomBytes(16);
-    let salt = crypto.randomBytes(12);
+    let salt = crypto.randomBytes(16);
 
-    let derivedKeyBuffer = await promisfyCryptoScrypt(pwdBuff, salt, 32);
+    let derivedKeyBuffer = await promisfyCryptoScrypt(pwdBuff, salt, 32, { cost: scryptRounds });
 
     let cipher = crypto.createCipheriv("aes-256-cbc", derivedKeyBuffer, iv);
     let encrypted = cipher.update(url, "utf8", "hex");
@@ -42,9 +45,9 @@ async function encrypt(url, password) {
 
 async function decrypt(urlData, password) {
   if (!password || !urlData ||
-		!urlData.iv || !urlData.salt || !urlData.longURL) {
-    return new Promise((resolve, reject) => {
-      reject("Critical: Missing Fields");
+    !urlData.iv || !urlData.salt || !urlData.longURL) {
+    return new Promise((_resolve, reject) => {
+      reject(Error("Critical: Missing Fields"));
     });
   }
 
@@ -54,7 +57,7 @@ async function decrypt(urlData, password) {
     let iv = Buffer.from(urlData.iv, "hex");
     let salt = Buffer.from(urlData.salt, "hex");
 
-    let derivedKeyBuffer = await promisfyCryptoScrypt(pwdBuff, salt, 32);
+    let derivedKeyBuffer = await promisfyCryptoScrypt(pwdBuff, salt, 32, { cost: scryptRounds });
 
     let decipher = crypto.createDecipheriv("aes-256-cbc", derivedKeyBuffer, iv);
     let decrypted = decipher.update(urlData.longURL, "hex", "utf8");
@@ -70,7 +73,13 @@ async function decrypt(urlData, password) {
   }
 }
 
-module.exports = {
-  decrypt: decrypt,
-  encrypt: encrypt,
-}; 
+module.exports = function (config) {
+  if (config) {
+    bcryptRounds = config.bcryptRounds;
+    scryptRounds = config.scryptRounds;
+  }
+  return {
+    decrypt: decrypt,
+    encrypt: encrypt,
+  };
+};

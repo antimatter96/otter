@@ -6,7 +6,7 @@ var rndm = require("rndm");
 var bcrypt = require("bcrypt");
 
 var dbQueries;
-var customCrypto = require("../libs/customCrypto");
+var customCrypto = require("../libs/customCrypto")();
 
 var router = express.Router();
 
@@ -159,6 +159,7 @@ async function shorternPost(req, res) {
 
   try {
 
+    // To-do : Limit this
     while (true) {
       shortUrl = rndm.base62(7);
       let present = await dbQueries.checkURL(shortUrl);
