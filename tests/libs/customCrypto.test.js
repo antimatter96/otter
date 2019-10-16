@@ -1,33 +1,53 @@
 // eslint-disable-next-line no-unused-vars
-var should = require('should');
-var sinon = require('sinon');
+var should = require("should");
+//var sinon = require('sinon');
 
-var customCrypto = require("../../src/libs/customCrypto")({bcryptRounds : 1, scryptRounds : 2 });
+var customCrypto = require("../../src/libs/customCrypto")({ bcryptRounds: 1, scryptRounds: 2 });
+var errStrings = require("../../src/libs/errors");
 
-afterEach(function() {
-  // Restore the default sandbox here
-  sinon.restore();
-});
+// afterEach(function () {
+//   // Restore the default sandbox here
+//   sinon.restore();
+// });
 
-describe('encrypt', function () {
-  describe('Params Checks', function () {
-    describe('missing params', function () {
+describe("encrypt", function () {
+  describe("Params Checks", function () {
+    describe("missing params", function () {
 
-      context('rejects', function () {
-        it('all missing params', function () {
-          return customCrypto.encrypt().should.be.rejected();
+      context("rejects", function () {
+        it("all missing params", function () {
+          return customCrypto.encrypt().should.be.rejectedWith(errStrings.errParamMissing);
         });
-        it('url missing', function () {
-          return customCrypto.encrypt(null, "password").should.be.rejected();
+        it("url missing", function () {
+          return customCrypto.encrypt(null, "password").should.be.rejectedWith(errStrings.errParamMissing);
         });
-        it('on password params', function () {
-          return customCrypto.encrypt("url", null).should.be.rejected();
+        it("password params", function () {
+          return customCrypto.encrypt("url", null).should.be.rejectedWith(errStrings.errParamMissing);
         });
+      });
 
-        it('', function() {
-          return customCrypto.encrypt("urlData", "password").should.be.resolved().then(function(error) {
-            error.should.not.have.property("message", "Critical: Missing Fields");
-          });
+      context("accepts", function () {
+        it("none missing", function () {
+          return customCrypto.encrypt("url", "password").should.be.resolved();
+        });
+      });
+
+    });
+
+    describe("type mismatch params", function () {
+
+      context("rejects", function () {
+        it("url type mismatch", function () {
+          return customCrypto.encrypt({}, "password").should.be.rejectedWith(errStrings.errParamMissmatch);
+        });
+        it("password type mismatch", function () {
+          return customCrypto.encrypt("url", {}).should.be.rejectedWith(errStrings.errParamMissmatch);
+        });
+      });
+
+      context("accepts", function () {
+        it("none missing", function () {
+          return customCrypto.encrypt("url", "password").should.be.resolved();
         });
       });
 
@@ -36,51 +56,44 @@ describe('encrypt', function () {
   });
 });
 
-describe('decrypt', function () {
-  describe('Params Checks', function () {
-    describe('missing params', function () {
+describe("decrypt", function () {
+  describe("Params Checks", function () {
+    let urlData = sampleURLData();
+    this.beforeEach(function () {
+      urlData = sampleURLData();
+    });
+    describe("missing params", function () {
 
-      context('rejects', function () {
-        it('all missing params', function () {
+      context("rejects", function () {
+        it("all missing params", function () {
           return customCrypto.decrypt().should.be.rejected();
         });
-        it('urlData missing', function () {
+        it("urlData missing", function () {
           return customCrypto.decrypt(null, "password").should.be.rejected();
         });
-        it('on password missing', function () {
-          let urlData = {
-            iv : "someiv",
-            salt: "somesalt",
-            longURL: "somelongURL",
-          };
+        it("password missing", function () {
+
           return customCrypto.decrypt(urlData, null).should.be.rejected();
         });
-        context("urlData has iv, salt, longURL", function() {
-          let urlData;
-          this.beforeEach(function() {
-            urlData = {
-              iv : "someiv",
-              salt: "somesalt",
-              longURL: "somelongURL",
-            };
-          });
-          it('', function() {
+        context("urlData present", function () {
+          it("iv missing", function () {
             delete urlData.iv;
-            return customCrypto.decrypt(urlData, "password").should.be.rejectedWith("Critical: Missing Fields");
+            return customCrypto.decrypt(urlData, "password").should.be.rejectedWith(errStrings.errParamMissing);
           });
-          it('', function() {
+          it("salt missing", function () {
             delete urlData.salt;
-            return customCrypto.decrypt(urlData, "password").should.be.rejectedWith("Critical: Missing Fields");
+            return customCrypto.decrypt(urlData, "password").should.be.rejectedWith(errStrings.errParamMissing);
           });
-          it('', function() {
+          it("password missing", function () {
             delete urlData.longURL;
-            return customCrypto.decrypt(urlData, "password").should.be.rejectedWith("Critical: Missing Fields");
+            return customCrypto.decrypt(urlData, "password").should.be.rejectedWith(errStrings.errParamMissing);
           });
-          it('', function() {
-            return customCrypto.decrypt(urlData, "password").should.be.rejected().then(function(error) {
-              error.should.not.have.property("message", "Critical: Missing Fields");
-            });
-          });
+        });
+      });
+
+      context("accepts", function () {
+        it("none missing", function () {
+          return customCrypto.decrypt(urlData, "password").should.be.resolved();
         });
       });
 
@@ -88,3 +101,12 @@ describe('decrypt', function () {
 
   });
 });
+
+function sampleURLData() {
+  return {
+    iv: "49d31b0d07a1145fc22df3168110572b",
+    longURL: "24b0032fb7541d35b585bfc24d8e5b8e",
+    salt: "1ddb76208f7d2db188e242322de7f0d8",
+    password: "$2b$04$BWcUP5yqUZ7wKrx0IKFPKesuQ8ZAa7Nwz2ED1Zyr2Ne29fkT2LEEm",
+  };
+}

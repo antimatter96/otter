@@ -2,6 +2,14 @@ var crypto = require("crypto");
 const util = require("util");
 var bcrypt = require("bcrypt");
 
+var errStrings = require("./errors");
+var errErrors = {};
+for (let err in errStrings) {
+  if (errStrings.hasOwnProperty(err)) {
+    errErrors[err] = Error(errStrings[err]);
+  }
+}
+
 var promisfyCryptoScrypt = util.promisify(crypto.scrypt);
 
 var bcryptRounds = 10;
@@ -10,7 +18,13 @@ var scryptRounds = 16384;
 async function encrypt(url, password) {
   if (!password || !url) {
     return new Promise((_resolve, reject) => {
-      reject(Error("Critical: Missing Fields"));
+      reject(errErrors.errParamMissing);
+    });
+  }
+
+  if (typeof (password) != "string" || typeof (url) != "string") {
+    return new Promise((_resolve, reject) => {
+      reject(errErrors.errParamMissmatch);
     });
   }
 
@@ -47,7 +61,15 @@ async function decrypt(urlData, password) {
   if (!password || !urlData ||
     !urlData.iv || !urlData.salt || !urlData.longURL) {
     return new Promise((_resolve, reject) => {
-      reject(Error("Critical: Missing Fields"));
+      reject(errErrors.errParamMissing);
+    });
+  }
+
+  if (typeof (password) != "string" || typeof (urlData) != "object" ||
+    typeof (urlData.iv) != "string" || typeof (urlData.salt) != "string" ||
+    typeof (urlData.longURL) != "string") {
+    return new Promise((_resolve, reject) => {
+      reject(errErrors.errParamMissmatch);
     });
   }
 
