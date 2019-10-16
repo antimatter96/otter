@@ -102,6 +102,35 @@ describe("decrypt", function () {
   });
 });
 
+describe("both", function () {
+  describe("bcrypt and scrypt params wrong", function () {
+    context("rejects", function () {
+      context("encrypt", function () {
+        it("wrong bcrypt", function () {
+          customCrypto = require("../../src/libs/customCrypto")({ bcryptRounds: "number", scryptRounds: 2 });
+          return customCrypto.encrypt("urlData", "password").should.be.rejectedWith(/Invalid/);
+        });
+        it("wrong scrypt", function () {
+          customCrypto = require("../../src/libs/customCrypto")({ bcryptRounds: 1, scryptRounds: 333 });
+          return customCrypto.encrypt("urlData", "password").should.be.rejectedWith("Invalid scrypt parameter");
+        });
+      });
+      context("decrypt", function () {
+        let urlData = sampleURLData();
+        // decrypt does not matter on bcrypt rounds
+        it("wrong bcrypt PASSES", function () {
+          customCrypto = require("../../src/libs/customCrypto")({ bcryptRounds: "number", scryptRounds: 2 });
+          return customCrypto.decrypt(urlData, "password").should.be.resolved();
+        });
+        it("wrong scrypt", function () {
+          customCrypto = require("../../src/libs/customCrypto")({ bcryptRounds: 1, scryptRounds: 77 });
+          return customCrypto.decrypt(urlData, "password").should.be.rejectedWith("Invalid scrypt parameter");
+        });
+      });
+    });
+  });
+});
+
 function sampleURLData() {
   return {
     iv: "49d31b0d07a1145fc22df3168110572b",
