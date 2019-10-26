@@ -149,12 +149,18 @@ async function linkPost(req, res) {
 async function shorternPost(req, res) {
   var url = req.body.url;
 
+  if (!url) {
+    res.redirect("/new?invalid=true");
+    return;
+  }
   if (!validator.isURL(url)) {
     res.redirect("/new?invalid=true");
     return;
   }
   url = normalizeUrl(url);
   let shortUrl;
+
+  // TODO : Limit password length
   var password = req.body.password || "no";
 
   try {
