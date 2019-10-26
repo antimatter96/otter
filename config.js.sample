@@ -45,4 +45,9 @@ if (process.env.PRO == 1) {
   config.morgan = { stream: accessLogStream };
 }
 
+config.crypto = {
+  bcryptRounds : 10,
+  scryptRounds : 16384,
+};
+
 module.exports = config;

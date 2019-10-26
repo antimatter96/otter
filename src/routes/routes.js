@@ -6,7 +6,7 @@ var rndm = require("rndm");
 var bcrypt = require("bcrypt");
 
 var dbQueries;
-var customCrypto = require("../libs/customCrypto")();
+var customCrypto;
 
 var router = express.Router();
 
@@ -187,6 +187,7 @@ async function shorternPost(req, res) {
 function init(config) {
   config.redisConfig.type = "redis";
   dbQueries = require("../db/queries").init(config.redisConfig);
+  customCrypto = require("../libs/customCrypto")(config.crypto);
   return router;
 }
 
