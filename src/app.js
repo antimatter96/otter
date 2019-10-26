@@ -27,7 +27,7 @@ function createApp(CONFIG) {
 
   // Logging
 
-  app.use(morgan("common", { stream: CONFIG.accessLogStream }));
+  app.use(morgan("common", CONFIG.morgan));
 
   // Templates
 

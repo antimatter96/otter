@@ -38,9 +38,16 @@ if (process.env.PRO == 1) {
     password: process.env.REDIS_PASSWORD
   };
   config.port = process.env.PORT || 8080;
-  config.accessLogStream = null;
+  let accessLogStream = fs.createWriteStream(path.join(__dirname, "access.log"), { flags: "a" });
+  config.morgan = { stream: accessLogStream };
 } else {
-  config.accessLogStream = fs.createWriteStream(path.join(__dirname, "access.log"), { flags: "a" });
+  let accessLogStream = fs.createWriteStream(path.join(__dirname, "access.log"), { flags: "a" });
+  config.morgan = { stream: accessLogStream };
 }
+
+config.crypto = {
+  bcryptRounds : 10,
+  scryptRounds : 16384,
+};
 
 module.exports = config;

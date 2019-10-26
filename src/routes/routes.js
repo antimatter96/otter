@@ -6,7 +6,7 @@ var rndm = require("rndm");
 var bcrypt = require("bcrypt");
 
 var dbQueries;
-var customCrypto = require("../libs/customCrypto");
+var customCrypto;
 
 var router = express.Router();
 
@@ -149,16 +149,23 @@ async function linkPost(req, res) {
 async function shorternPost(req, res) {
   var url = req.body.url;
 
+  if (!url) {
+    res.redirect("/new?invalid=true");
+    return;
+  }
   if (!validator.isURL(url)) {
     res.redirect("/new?invalid=true");
     return;
   }
   url = normalizeUrl(url);
   let shortUrl;
+
+  // TODO : Limit password length
   var password = req.body.password || "no";
 
   try {
 
+    // To-do : Limit this
     while (true) {
       shortUrl = rndm.base62(7);
       let present = await dbQueries.checkURL(shortUrl);
@@ -186,6 +193,7 @@ async function shorternPost(req, res) {
 function init(config) {
   config.redisConfig.type = "redis";
   dbQueries = require("../db/queries").init(config.redisConfig);
+  customCrypto = require("../libs/customCrypto")(config.crypto);
   return router;
 }
 

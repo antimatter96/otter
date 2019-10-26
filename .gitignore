@@ -2,3 +2,4 @@ node_modules/
 access.log
 coverage/
 config.js
+.nyc_output/
