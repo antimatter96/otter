@@ -2,8 +2,12 @@ env:
   global:
     - CC_TEST_REPORTER_ID=07d9b1372db719ac772eda00eb7925826fb04219715c2e6b64783fe3a5fca3dc
 language: node_js
-dist: trusty
-node_js: lts/*
+dist: bionic
+node_js: 
+  - lts/*
+  - node
+services:
+  - redis-server
 
 before_script:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
