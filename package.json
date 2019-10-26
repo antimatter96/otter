@@ -20,8 +20,8 @@
 		"validator": "*"
 	},
 	"scripts": {
-		"test": "mocha --recursive tests/",
-		"test-with-coverage": "nyc --reporter=html mocha --recursive tests/",
+		"test": "mocha --exit --recursive tests/",
+		"test-with-coverage": "./node_modules/nyc/bin/nyc.js --reporter=html ./node_modules/mocha/bin/mocha --exit --recursive tests/",
 		"start": "node server.js"
 	},
 	"author": "Arpit Jain",
