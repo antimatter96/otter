@@ -11,7 +11,7 @@ resources:
   - container: redis
     image: redis
     ports:
-    - 6379
+    - 6379/tcp
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -19,13 +19,33 @@ pool:
 services:
   redis: redis
 
+strategy:
+  matrix:
+    node_10_x:
+      node_version: 10.x
+    node_9_x:
+      node_version: 9.x
+
+
 steps:
 - task: NodeTool@0
   inputs:
-    versionSpec: '10.x'
+    versionSpec: $(node_version)
   displayName: 'Install Node.js'
 
 - script: |
     npm install
-    npm test
+    npm run test-with-coverage-azure
   displayName: 'npm install and test'
+
+- task: PublishTestResults@2
+  condition: succeededOrFailed()
+  inputs:
+    testRunner: JUnit
+    testResultsFiles: '**/TEST-RESULTS.xml'
+
+- task: PublishCodeCoverageResults@1
+  inputs: 
+    codeCoverageTool: Cobertura
+    summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/*coverage.xml'
+    reportDirectory: '$(System.DefaultWorkingDirectory)/**/coverage'
