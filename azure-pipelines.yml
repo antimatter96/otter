@@ -22,7 +22,8 @@ strategy:
 
 
 steps:
-  - script: echo "Job Redis_Ping ran and doThing is true."
+  - script: echo $(redis-cli ping)
+    displayName: 'Redis Ping'
 
   - task: NodeTool@0
     inputs:
