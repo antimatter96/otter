@@ -23,6 +23,7 @@
 		"test": "mocha --exit --recursive tests/",
 		"test-with-coverage": "./node_modules/nyc/bin/nyc.js --reporter=html ./node_modules/mocha/bin/mocha --exit --recursive tests/",
 		"test-with-coverage-travis": "./node_modules/nyc/bin/nyc.js --reporter=lcov ./node_modules/mocha/bin/mocha --exit --recursive tests/",
+		"test-with-coverage-azure": "./node_modules/nyc/bin/nyc.js --reporter=cobertura ./node_modules/mocha/bin/mocha --exit --recursive tests/ --reporter mocha-junit-reporter",
 		"start": "node server.js"
 	},
 	"author": "Arpit Jain",
@@ -35,6 +36,7 @@
 		"nyc": "^14.1.1",
 		"should": "^13.2.3",
 		"sinon": "^7.5.0",
-		"supertest": "^4.0.2"
+		"supertest": "^4.0.2",
+		"mocha-junit-reporter": "*"
 	}
 }
