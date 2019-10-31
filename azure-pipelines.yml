@@ -20,39 +20,31 @@ strategy:
     node_10_x:
       node_version: 10.x
 
-jobs:
-- job: Redis_Ping
-  steps:
-    - script: |
-        echo "##vso[task.setvariable variable=on;isOutput=true]$(redis-cli ping)" #The variable doThing is set to true
-      name: DetermineResult
-- job: Bar
-  dependsOn: Redis_Ping
-  condition: eq(dependencies.Foo.outputs['DetermineResult.on'], 'PONG')
-  steps:
-    - script: echo "Job Redis_Ping ran and doThing is true."
 
-    - task: NodeTool@0
-      inputs:
-        versionSpec: $(node_version)
-      displayName: 'Install Node.js'
-      
-    - script: |
-        npm install
-      displayName: 'npm install'
+steps:
+  - script: echo "Job Redis_Ping ran and doThing is true."
 
-    - script: |
-        npm run test-with-coverage-azure
-      displayName: 'npm test'
+  - task: NodeTool@0
+    inputs:
+      versionSpec: $(node_version)
+    displayName: 'Install Node.js'
 
-    - task: PublishTestResults@2
-      condition: succeededOrFailed()
-      inputs:
-        testRunner: JUnit
-        testResultsFiles: '**/TEST-RESULTS.xml'
+  - script: |
+      npm install
+    displayName: 'npm install'
 
-    - task: PublishCodeCoverageResults@1
-      inputs: 
-        codeCoverageTool: Cobertura
-        summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/*coverage.xml'
-        reportDirectory: '$(System.DefaultWorkingDirectory)/**/coverage'
+  - script: |
+      npm run test-with-coverage-azure
+    displayName: 'npm test'
+
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testRunner: JUnit
+      testResultsFiles: '**/TEST-RESULTS.xml'
+
+  - task: PublishCodeCoverageResults@1
+    inputs: 
+      codeCoverageTool: Cobertura
+      summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/*coverage.xml'
+      reportDirectory: '$(System.DefaultWorkingDirectory)/**/coverage'
