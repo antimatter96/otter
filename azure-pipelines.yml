@@ -26,8 +26,10 @@ strategy:
 
 steps:
   - script : |
-      apt install -y curl
-      apt install redis-tools
+      set -e
+      apt-get update
+      apt-get install -y curl
+      apt-get install redis-tools
       redis-cli -h redis ping
     displayName: 'install redis'
 
