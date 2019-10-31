@@ -6,6 +6,11 @@
 trigger:
 - master
 
+resources:
+  containers:
+  - container: redis
+    image: redis
+
 pool:
   vmImage: 'ubuntu-latest'
 
