@@ -15,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [10.x, 12.x]
+        node-version: [12.x]
 
     steps:
     - uses: actions/checkout@v1
@@ -30,6 +30,10 @@ jobs:
         npm test
       env:
         CI: true
+    - name: lslsls
+      run: |
+        ls
+        ls ./coverage
     - name: Coveralls GitHub Action
       uses: coverallsapp/github-action@v1.0.1
       with:
