@@ -30,11 +30,6 @@ jobs:
         npm run test-with-coverage-travis
       env:
         CI: true
-    - name: lslsls
-      run: |
-        ls
-        echo "hi"
-        ls coverage/
     - name: Coveralls GitHub Action
       uses: coverallsapp/github-action@v1.0.1
       with:
