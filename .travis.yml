@@ -15,7 +15,8 @@ before_script:
   - ./cc-test-reporter before-build
 
 script:
-  - npm run test-with-coverage-travis
+  - npm install -g codecov
+  - npm run test-with-coverage-travis && codecov
 
 after_script:
   - ./cc-test-reporter after-build -t lcov --exit-code $TRAVIS_TEST_RESULT
