@@ -89,6 +89,20 @@ describe("decrypt", function () {
             return customCrypto.decrypt(urlData, "password").should.be.rejectedWith(errStrings.errParamMissing);
           });
         });
+
+        context("type mismatch", function () {
+          it("password missing", function () {
+            return customCrypto.decrypt(urlData, {}).should.be.rejectedWith(errStrings.errParamMissmatch);
+          });
+          it("urlData missing", function () {
+            delete urlData.salt;
+            return customCrypto.decrypt("urlData", "password").should.be.rejectedWith(errStrings.errParamMissing);
+          });
+          it("password missing", function () {
+            delete urlData.longURL;
+            return customCrypto.decrypt(urlData, "password").should.be.rejectedWith(errStrings.errParamMissing);
+          });
+        });
       });
 
       context("accepts", function () {

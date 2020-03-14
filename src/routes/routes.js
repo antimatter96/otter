@@ -166,12 +166,20 @@ async function shorternPost(req, res) {
   try {
 
     // To-do : Limit this
-    while (true) {
+    let tries = 5;
+    let allBooked = true;
+    while (tries > 0) {
       shortUrl = rndm.base62(7);
       let present = await dbQueries.checkURL(shortUrl);
       if (present == 0) {
+        allBooked = false;
         break;
       }
+      tries--;
+    }
+
+    if (allBooked) {
+      throw new Error("No random key found");
     }
 
     let dataToSave = await customCrypto.encrypt(url, password);

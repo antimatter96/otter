@@ -33,8 +33,8 @@ config.morgan = {
 };
 
 config.crypto = {
-  bcryptRounds : 10,
-  scryptRounds : 16384,
+  bcryptRounds : 1,
+  scryptRounds : 2,
 };
 
 module.exports = config;

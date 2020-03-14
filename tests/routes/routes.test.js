@@ -36,15 +36,8 @@ describe("POST /shorten", function () {
         done();
       });
     });
-    // it('with no csrf token', function (done) {
 
-    // });
-
-    // it('with no csrf 2', function (done) {
-    //   agent.post('/shorten').expect(200, done);
-    // });
-
-    it("should not post just a name1", function (done) {
+    it("should redirect if no url", function (done) {
       request(app)
         .post("/shorten")
         .type("form")
@@ -56,6 +49,19 @@ describe("POST /shorten", function () {
         }).expect(302, done);
     });
 
+    it("should redirect if url is bad", function (done) {
+      request(app)
+        .post("/shorten")
+        .type("form")
+        .set("Cookie", cookies)
+        .send({
+          _csrf: token,
+          url: "https://com"
+        })
+        .expect(function (res) {
+          res.text.should.match(/\/new\?invalid=true/);
+        }).expect(302, done);
+    });
 
     it("should not post just a name2", function (done) {
       request(app)
@@ -66,11 +72,29 @@ describe("POST /shorten", function () {
           _csrf: token,
           url: "https://www.google.com",
         })
-        .expect(function (_res) {
+        .expect(function (res) {
           //console.log(res);
           //console.log(res.text);
         }).expect(200, done);
     });
+
+    it("should not post just a name2", function (done) {
+      request(app)
+        .post("/shorten")
+        .type("form")
+        .set("Cookie", cookies)
+        .send({
+          _csrf: token,
+          url: "https://www.google.com",
+          password: "asdasd"
+        })
+        .expect(function (res) {
+          //console.log(res);
+          //console.log(res.text);
+        }).expect(200, done);
+    });
+
+    
 
   });
 
