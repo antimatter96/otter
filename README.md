@@ -2,7 +2,6 @@
 
 [![Known Vulnerabilities](https://snyk.io/test/github/antimatter96/otter/badge.svg)](https://snyk.io/test/github/antimatter96/otter)
 
-Current version : https://otter.onrender.com/
 
 ### Otter URL shortner
 #### Ability to shorten with passwords and also get the QR code for the link
@@ -13,8 +12,6 @@ Current version : https://otter.onrender.com/
 - Nodejs
 - Express.js
 - Redis
-
-Will be hosted on zeit now and heroku
 
 ## Basic Functioning
 - User enters URL to shorten
