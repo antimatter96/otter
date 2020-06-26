@@ -42,7 +42,7 @@
 - Basic limiting on number of password attempts is introduced
 - Improved error handling and error codes
 
- ** Need to Add nonce to AES **
+ ~~Need to Add nonce to AES~~
 
 ## Upcoming
 
