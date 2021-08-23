@@ -4,6 +4,7 @@ type SessionConfig = {
   name: string,
   cookie: { maxAge: number },
   secret : string,
+  store? : any
 }
 
 export {

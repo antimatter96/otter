@@ -23,7 +23,7 @@ var newConfig: Config = {
   },
   redisConfig: {
     host: "localhost",
-    port: "6379",
+    port: 6379,
   },
   morganConfig: {
     stream: fs.createWriteStream(path.join(__dirname, "access.log"), { flags: "a" })
@@ -37,7 +37,7 @@ if (process.env.PRO == "1") {
 
   newConfig.redisConfig = {
     host: process.env.REDIS_HOST || "localhost",
-    port: process.env.REDIS_PORT || "6379",
+    port: parseInt(process.env.REDIS_PORT || "6379", 10),
     password: process.env.REDIS_PASSWORD
   };
 }

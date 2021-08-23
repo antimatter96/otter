@@ -5,6 +5,10 @@ var normalizeUrl = require("normalize-url");
 var rndm = require("rndm");
 var bcrypt = require("bcrypt");
 
+
+import { Config } from "../../models/config/config"
+
+
 var dbQueries;
 var customCrypto;
 
@@ -198,10 +202,10 @@ async function shorternPost(req, res) {
   }
 }
 
-function init(config) {
+function init(config: Config) {
   config.redisConfig.type = "redis";
   dbQueries = require("../db/queries").init(config.redisConfig);
-  customCrypto = require("../libs/customCrypto")(config.crypto);
+  customCrypto = require("../libs/customCrypto")(config.cryptoConfig);
   return router;
 }
 
