@@ -1,57 +1,52 @@
-var crypto = require("crypto");
-const util = require("util");
-var bcrypt = require("bcrypt");
+import crypto from "crypto"
+import util from "util"
+import bcrypt from "bcrypt"
+import errors from "./errors"
 
-var errStrings = require("./errors");
-var errErrors = {};
-for (let err in errStrings) {
-  if (errStrings.hasOwnProperty(err)) {
-    errErrors[err] = Error(errStrings[err]);
+import { CustomCryptoConfig } from "../../models/config/custom_crypto"
+import { URLObj } from "../../models/url_object"
+
+
+const promisfyCryptoScrypt = <(password: crypto.BinaryLike, salt: crypto.BinaryLike, keylen: number) => Promise<any>> util.promisify(crypto.scrypt)
+
+// let bcryptRounds = 10;
+// let scryptRounds = 16384;
+
+
+class CustomCrypto {
+  bcryptRounds:number
+  scryptRounds:number
+
+  constructor(config: CustomCryptoConfig) {
+    this.bcryptRounds = config.bcryptRounds;
+    this.scryptRounds = config.scryptRounds;
   }
-}
 
-var promisfyCryptoScrypt = util.promisify(crypto.scrypt);
-
-module.exports = function (config) {
-  let bcryptRounds = 10;
-  let scryptRounds = 16384;
-
-  if (config) {
-    bcryptRounds = config.bcryptRounds;
-    scryptRounds = config.scryptRounds;
-  }
-
-  async function encrypt(url, password) {
+  async encrypt(url:string, password:string): Promise<URLObj> {
     if (!password || !url) {
       return new Promise((_resolve, reject) => {
-        reject(errErrors.errParamMissing);
-      });
-    }
-
-    if (typeof (password) != "string" || typeof (url) != "string") {
-      return new Promise((_resolve, reject) => {
-        reject(errErrors.errParamMissmatch);
+        reject(errors.errParamMissing);
       });
     }
 
     try {
-      let passwordHash = await bcrypt.hash(password, bcryptRounds);
+      let passwordHash = await bcrypt.hash(password, this.bcryptRounds);
 
       let pwdBuff = Buffer.from(password);
 
       let iv = crypto.randomBytes(16);
       let salt = crypto.randomBytes(16);
 
-      let derivedKeyBuffer = await promisfyCryptoScrypt(pwdBuff, salt, 32, { cost: scryptRounds });
+      let derivedKeyBuffer = await promisfyCryptoScrypt(pwdBuff, salt, this.scryptRounds);
 
-      let cipher = crypto.createCipheriv("aes-256-cbc", derivedKeyBuffer, iv);
+      let cipher = crypto.createCipheriv(algorithm, derivedKeyBuffer, iv);
       let encrypted = cipher.update(url, "utf8", "hex");
       encrypted += cipher.final("hex");
 
       return new Promise((resolve, _reject) => {
         resolve({
           iv: iv.toString("hex"),
-          longURL: encrypted.toString("hex"),
+          longURL: encrypted,
           salt: salt.toString("hex"),
           password: passwordHash,
         });
@@ -63,19 +58,19 @@ module.exports = function (config) {
     }
   }
 
-  async function decrypt(urlData, password) {
+  async decrypt(urlData: URLObj, password:string): Promise<string> {
     if (!password || !urlData ||
       !urlData.iv || !urlData.salt || !urlData.longURL) {
       return new Promise((_resolve, reject) => {
-        reject(errErrors.errParamMissing);
+        reject(errors.errParamMissing);
       });
     }
 
-    if (typeof (password) != "string" || typeof (urlData) != "object" ||
+    if (typeof (urlData) != "object" ||
       typeof (urlData.iv) != "string" || typeof (urlData.salt) != "string" ||
       typeof (urlData.longURL) != "string") {
       return new Promise((_resolve, reject) => {
-        reject(errErrors.errParamMissmatch);
+        reject(errors.errParamMissmatch);
       });
     }
 
@@ -85,9 +80,9 @@ module.exports = function (config) {
       let iv = Buffer.from(urlData.iv, "hex");
       let salt = Buffer.from(urlData.salt, "hex");
 
-      let derivedKeyBuffer = await promisfyCryptoScrypt(pwdBuff, salt, 32, { cost: scryptRounds });
+      let derivedKeyBuffer = await promisfyCryptoScrypt(pwdBuff, salt, this.scryptRounds);
 
-      let decipher = crypto.createDecipheriv("aes-256-cbc", derivedKeyBuffer, iv);
+      let decipher = crypto.createDecipheriv(algorithm, derivedKeyBuffer, iv);
       let decrypted = decipher.update(urlData.longURL, "hex", "utf8");
       decrypted += decipher.final("utf8");
 
@@ -100,9 +95,6 @@ module.exports = function (config) {
       });
     }
   }
+}
 
-  return {
-    decrypt: decrypt,
-    encrypt: encrypt,
-  };
-};
+const algorithm = "aes-256-gcm"

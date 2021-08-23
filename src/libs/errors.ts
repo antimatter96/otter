@@ -1,4 +1,4 @@
-module.exports = {
-  errParamMissing : "Critical: Missing Fields",
-  errParamMissmatch : "Critical: fields should be string",
+export default {
+  errParamMissing : Error("Critical: Missing Fields"),
+  errParamMissmatch : Error("Critical: fields should be string"),
 };
