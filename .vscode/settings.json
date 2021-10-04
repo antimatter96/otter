@@ -1,0 +1,5 @@
+{
+  "editor.fontFamily": "JetBrains Mono, Fura Code, Fira Code, Menlo, Monaco, Consolas, 'Courier New', monospace",
+  "editor.fontLigatures": true,
+  "typescript.tsdk": "/mnt/c/dev/code/otter_ts/node_modules/typescript/bin/ts"
+}

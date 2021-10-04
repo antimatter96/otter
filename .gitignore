@@ -3,3 +3,5 @@ access.log
 coverage/
 config.js
 .nyc_output/
+build/
+dump.rdb
