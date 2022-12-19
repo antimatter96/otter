@@ -1,3 +1,5 @@
+import { URLObj } from "../../models/url_object";
+
 function init(dbConfig) {
   if (dbConfig.type == "redis") {
     return initRedis(dbConfig);
@@ -9,13 +11,13 @@ function initRedis(redisConfig) {
   var client = require("./redis.js")(redisConfig);
 
   return {
-    getURL: function (shortURL) {
+    getURL: function (shortURL: string) {
       return client.hgetall(shortURL);
     },
-    checkURL: function(shortURL) {
+    checkURL: function(shortURL: string) {
       return client.hexists(shortURL, "longURL");
     },
-    addURL: function(shortURL, data) {
+    addURL: function(shortURL: string, data:URLObj) {
       return client.hmset(shortURL, data);
     }
   };

@@ -1,7 +1,6 @@
 var nunjucks = require("nunjucks");
 var bodyParser = require("body-parser");
 var cookieParser = require("cookie-parser");
-var session = require("express-session");
 var RedisStore = require("connect-redis")(session);
 var favicon = require("serve-favicon");
 var path = require("path");
@@ -10,6 +9,7 @@ var morgan = require("morgan");
 import redis from "ioredis"
 
 import express, {Response, Request} from "express"
+import session from "express-session"
 import { Config } from "../models/config/config";
 
 //==============================

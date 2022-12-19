@@ -1,18 +1,17 @@
-var express = require("express");
-var csrf = require("csurf");
 var validator = require("validator");
 var normalizeUrl = require("normalize-url");
 var rndm = require("rndm");
-var bcrypt = require("bcrypt");
 
-
-import { Config } from "../../models/config/config"
-
+import csurf from "csurf"
+import { Config } from "../../models/config/config";
+import express, {Response, Request} from "express";
+import session from "express-session";
+import { CustomCrypto } from "../libs/customCrypto";
 
 var dbQueries;
-var customCrypto;
+var customCrypto: CustomCrypto;
 
-var router = express.Router();
+let router:express.Router = express.Router();
 
 var csrfProtection = csrf({
   cookie: false
@@ -20,7 +19,7 @@ var csrfProtection = csrf({
 
 // Middlewares
 
-function rateLimmiter(req, res, next) {
+function rateLimmiter(req:Request, res:Response, next:CallableFunction) {
   if (req.session.lastAttempt && Date.now() - req.session.lastAttempt < 5000) {
     res.sendStatus(429);
     return;
@@ -28,7 +27,7 @@ function rateLimmiter(req, res, next) {
   next();
 }
 
-function disallowXHR(req, res, next) {
+function disallowXHR(req:Request, res:Response, next:CallableFunction) {
   if (req.xhr) {
     res.sendStatus(403);
     return;
@@ -36,7 +35,7 @@ function disallowXHR(req, res, next) {
   next();
 }
 
-function checkShortUrlPresence(req, res, next) {
+function checkShortUrlPresence(req:Request, res:Response, next:CallableFunction) {
   if (!req.params.id) {
     res.redirect("/");
     return;
@@ -44,8 +43,7 @@ function checkShortUrlPresence(req, res, next) {
   next();
 }
 
-async function loadShortUrlData(req, res, next) {
-
+async function loadShortUrlData(req:Request, res:Response, next:CallableFunction) {
   try {
     let urlData = await dbQueries.getURL(req.params.id);
     if (Object.keys(urlData).length === 0 && urlData.constructor === Object) {
@@ -63,12 +61,12 @@ async function loadShortUrlData(req, res, next) {
 
 }
 
-function exposeCSRFToken(req, res, next) {
+function exposeCSRFToken(req:Request, res:Response, next:CallableFunction) {
   res.locals.csrfToken = req.csrfToken();
   next();
 }
 
-function loadShortUrl(req, res, next) {
+function loadShortUrl(req:Request, res:Response, next:CallableFunction) {
   res.locals.shortUrl = req.params.id;
   next();
 }
@@ -87,7 +85,7 @@ router.post("/i/:id", disallowXHR, checkShortUrlPresence, loadShortUrlData, load
 router.post("/shorten", disallowXHR, shorternPost);
 router.get("/shorten", mainGet);
 
-function mainGet(req, res) {
+function mainGet(req:Request, res:Response) {
   if (req.query.invalid && req.query.invalid === "true") {
     res.render("home.njk", {
       message: "Enter a valid url",
@@ -97,11 +95,11 @@ function mainGet(req, res) {
   res.render("home.njk");
 }
 
-async function linkGet(req, res) {
+async function linkGet(req:Request, res:Response) {
   try {
     let urlData = res.locals.urlData;
 
-    let noPassword = await bcrypt.compare("no", urlData.password);
+    let noPassword = await customCrypto.comparePassword("no", urlData.password);
     if (!noPassword) {
       res.render("passwordNeeded.njk", { message: "Password Required" });
       return;
@@ -118,13 +116,13 @@ async function linkGet(req, res) {
   }
 }
 
-async function linkPost(req, res) {
+async function linkPost(req:Request, res:Response) {
   req.session.lastAttempt = Date.now();
   try {
     let urlData = res.locals.urlData;
 
     let password = "no";
-    let noPassword = await bcrypt.compare(password, urlData.password);
+    let noPassword = await customCrypto.comparePassword(password, urlData.password);
     if (!noPassword) {
       password = req.body.password || null;
       if (!password) {
@@ -132,7 +130,7 @@ async function linkPost(req, res) {
         return;
       }
 
-      let correctPassword = await bcrypt.compare(password, urlData.password);
+      let correctPassword = await customCrypto.comparePassword(password, urlData.password);
       if (!correctPassword) {
         res.render("passwordNeeded.njk", { message: "Wrong Password" });
         return;
@@ -150,7 +148,7 @@ async function linkPost(req, res) {
   }
 }
 
-async function shorternPost(req, res) {
+async function shorternPost(req:Request, res:Response) {
   var url = req.body.url;
 
   if (!url) {
@@ -205,7 +203,7 @@ async function shorternPost(req, res) {
 function init(config: Config) {
   config.redisConfig.type = "redis";
   dbQueries = require("../db/queries").init(config.redisConfig);
-  customCrypto = require("../libs/customCrypto")(config.cryptoConfig);
+  customCrypto = new CustomCrypto(config.cryptoConfig);
   return router;
 }
 

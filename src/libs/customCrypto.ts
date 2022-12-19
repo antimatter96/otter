@@ -13,6 +13,8 @@ const promisfyCryptoScrypt = <(password: crypto.BinaryLike, salt: crypto.BinaryL
 // let scryptRounds = 16384;
 
 
+const algorithm:string = "aes-256-gcm"
+
 class CustomCrypto {
   bcryptRounds:number
   scryptRounds:number
@@ -95,6 +97,14 @@ class CustomCrypto {
       });
     }
   }
+
+
+  async comparePassword(password: string, passwordHash: string):Promise<Boolean> {
+    let noPassword = await bcrypt.compare(password, passwordHash);
+    return noPassword;
+  }
 }
 
-const algorithm = "aes-256-gcm"
+export {
+  CustomCrypto
+};
